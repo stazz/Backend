@@ -1,0 +1,35 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>netstandard1.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="UtilPack.NuGet.MSBuild" Version="1.0.0"/>
+  </ItemGroup>
+  
+  <UsingTask
+    Condition=" '$(UtilPackNuGetMSBuildAssemblyPath)' != '' "
+    TaskFactory="UtilPack.NuGet.MSBuild.NuGetTaskRunnerFactory"
+    AssemblyFile="$(UtilPackNuGetMSBuildAssemblyPath)"
+    TaskName="UtilPack.MSBuild.AsyncExec.AsyncExecTask"
+  >
+    <Task>
+      <NuGetTaskInfo>
+        <PackageID>UtilPack.MSBuild.AsyncExec</PackageID>
+        <PackageVersion>1.0.0</PackageVersion>
+      </NuGetTaskInfo>
+    </Task>
+  </UsingTask>
+   
+  <Target Name="StartServerAsync">
+    
+    <PropertyGroup>
+      <DeploymentDirectory Condition=" '$(DeploymentDirectory)' == '' ">$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)\..\ProcessRunner'))</DeploymentDirectory>
+      <ServerConfigurationPath Condition=" '$(ServerConfigurationPath)' == '' ">$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)\..\Config\SampleServerConfig.json'))</ServerConfigurationPath>
+    </PropertyGroup>
+      
+    <UtilPack.MSBuild.AsyncExec.AsyncExecTask
+      Command="start dotnet &quot;$(DeploymentDirectory)\UtilPack.NuGet.ProcessRunner.dll&quot; /ProcessPackageID=Backend.HTTP.Server.Runner /ProcessPackageVersion=1.0.0 /DeploymentKind=CopyNonSDKAssemblies /ShutdownSemaphoreProcessArgument=ShutdownSemaphoreName /RestartSemaphoreProcessArgument=RestartSemaphoreName &quot;/ProcessArgument:ConfigurationFile=$(ServerConfigurationPath)&quot; /ProcessArgument:WatchComponentAssemblies=true /ProcessArgument:WatchServerConfigFile=true"
+    />
+  </Target>
+</Project>

@@ -1,0 +1,118 @@
+{
+  "Infrastructure": {
+    "DefaultComponentNuGetConfigurationFile": "Sample.NuGet.config"
+  },
+  "ResponseCreators": [
+  {
+    "Type": {
+      "PackageID": "Backend.HTTP.Common.StaticFiles",
+      "PackageVersion": "1.0.0"
+    },
+    "Configuration": {
+      "MatchPath": "public(/?.*)",
+      "RootFolder": "../Static/public"
+    }
+  },
+  {
+    "Type": {
+      "PackageID": "Backend.HTTP.Common.StaticFiles",
+      "PackageVersion": "1.0.0"
+    },
+    "Configuration": {
+      "RequiredAuthenticationSchema": "",
+      "MatchPath": "application(/?.*)",
+      "RootFolder": "../Static/private"
+    }
+  },
+  {
+    "Type": {
+      "PackageID": "Backend.HTTP.Common.StaticFiles",
+      "PackageVersion": "1.0.0"
+    },
+    "Configuration": {
+      "MatchPath": "(sw.js)",
+      "RootFolder": "../Static/serviceworker"
+    }
+  },
+  {
+    "Type": {
+      "PackageID": "SampleBackendOperation",
+      "Version": "1.0.0-RC1"
+    },
+    "Configuration": {
+      "MatchPath": "operation/SampleBackendOperation",
+      "WhatToSay": "Hello there!"
+    }
+  },
+  {
+    "Type": {
+      "PackageID": "Backend.HTTP.Common.Login",
+      "PackageVersion": "1.0.0"
+    },
+    "Configuration": {
+      "MatchPath": "operation/login",
+      "LoginProviderConfiguration": {
+        "Type": {
+          "PackageID": "SampleBackendLogin",
+          "PackageVersion": "1.0.0-RC1"
+        },
+        "Configuration": {
+          "Username": "sample",
+          "Password": "sample"
+        }
+      },
+      "UserIDTransformerConfiguration": {
+        "Type": {
+          "PackageID": "Backend.HTTP.Common.DigestTransformer",
+          "PackageVersion": "1.0.0"
+        },
+        "Configuration": {
+          "Base64EncodeShuffleSeed": 400
+        }
+      }
+    }
+  },
+  {
+    "Type": {
+      "PackageID": "Backend.HTTP.Common.Logout",
+      "PackageVersion": "1.0.0"
+    },
+    "Configuration": {
+      "MatchPath": "operation/logout",
+    }
+  }
+  ],
+  "Connection": {
+    "X509CertificatePath": "SampleCertificate.pfx",
+    "X509CertificatePassword": "public",
+    "EndPoints": [
+    {
+      "Host": "localhost",
+      "Port": 5413
+    }
+    ]
+  },
+  "HTTP": {
+    "Limits": {
+      "KeepAliveTimeout": "00:03:00"
+    }
+  },
+  "Authentication": [
+  {
+    "Schema": null,
+    "Authenticators":[
+    {
+      "Type": {
+        "PackageID": "Backend.HTTP.Common.HeaderAuthenticator",
+        "PackageVersion": "1.0.0"
+      },
+      "Configuration": {
+        "HeaderName": "X-SampleAuth",
+        "AuthenticationTokenExpirationTime": "03:00:00",
+        "AuthenticationTokenBase64ShuffleSeed": 300,
+        "AuthenticationTokenByteCount":32
+      }
+    }]
+  }
+  ]
+}

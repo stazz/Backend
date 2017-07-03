@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Private Assets Page</title>
+    <script src="../public/scripts.js"></script>
+    <!-- No need for service worker registration code - the only way to get here is via login page, and that one will install the worker. -->
+</head>
+<body>
+  <noscript>This page requires JavaScript to function. Reload this page after enabling JavaScript.</noscript>
+
+  <h1>Welcome to sample private assets page</h1>
+  <p>This page is located in Static/private folder of this sample, and can only be accessed by logging in from public login page.
+  All files in that folder require authentication in order to be shown.</p>
+  <div>
+  <p>Button below invokes code in SampleBackendOperation\Operation.cs.</p>
+  <form class="backend-operation-form"><button type="button" id="backend-operation-request">Test sample backend-operation</button><div id="backend-operation-result"></div></form></div>
+  
+  <div>
+  <p>Logging out uses default Backend.HTTP.Common.Logout response creator, and the code in this HTML page will redirect back to login page after logging out.</p>
+  <form class="logout-form"><button type="button" id="logout">Log out</button></form></div>
+  <script>
+  
+  // sendBackendOpFunc is from /public/scripts.js
+  var resultElement = document.getElementById("backend-operation-result");
+  document.getElementById("backend-operation-request").addEventListener("click", function() {
+    sendBackendOpFunc(
+      "GET",
+      "SampleBackendOperation",
+      null).then(function(responseInfo) {
+        if (responseInfo.response) {
+          responseInfo.response.text().then(function(data) {
+            resultElement.innerHTML = data;
+          });
+        } else {
+          resultElement.innerHTML = "ERROR!:\n" + responseInfo.error;
+        }
+      });
+  });
+  
+  document.getElementById("logout").addEventListener("click", function() {
+    sendBackendOpFunc(
+      "POST",
+      "logout",
+      null
+      ).then(function(responseInfo) {
+        if (responseInfo.response) {
+          window.location.assign("/public/");
+        } else {
+          console.error('ERROR IN LOGOUT', responseInfo.error);
+        }
+      });
+  });
+  
+  </script>
+</body>
+</html>

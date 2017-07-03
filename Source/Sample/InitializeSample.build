@@ -1,0 +1,98 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>netstandard1.0</TargetFramework>
+  </PropertyGroup>
+  
+  <PropertyGroup>
+    <DeploymentDirectory>$(MSBuildThisFileDirectory)\ProcessRunner</DeploymentDirectory>
+  </PropertyGroup>
+  
+  <Target Name="InitializeSample">
+    <PropertyGroup>
+      <TargetsToCall>BuildSampleOperation</TargetsToCall>
+      <TargetsToCall Condition="!Exists('$(DeploymentDirectory)')">$(TargetsToCall);DeployProcessRunner</TargetsToCall>
+      <TargetsToCall>$(TargetsToCall);StartServer</TargetsToCall>
+    </PropertyGroup>
+    
+    <CallTarget Targets="$(TargetsToCall)" />
+  </Target>
+  
+  <Target Name="DeployProcessRunner">
+  
+    <!-- We must use exec, since the properties provided by UtilPack.NuGet.MSBuild won't be visible otherwise. -->
+    <Exec
+      Command="&quot;$(MSBuildBinPath)\MSBuild.exe&quot; /t:Restore &quot;$(MSBuildThisFileDirectory)\Deployment\DeploySample.build&quot;"
+      />
+    
+    <MSBuild
+      Projects="$(MSBuildThisFileDirectory)\Deployment\DeploySample.build"
+      Targets="DeploySample"
+      UnloadProjectsOnCompletion="true"
+      Properties="DeploymentDirectory=$(DeploymentDirectory)"
+      />
+  </Target>
+  
+  <Target Name="StartProcessRunner">
+    <!-- Startup\StartServer.build -->
+  </Target>
+  
+  <Target Name="BuildSampleOperation">
+    <PropertyGroup>
+      <PackageRepositoryFolder>$(MSBuildThisFileDirectory)TempPackageSource</PackageRepositoryFolder>
+      <NuGetConfigPath>$(MSBuildThisFileDirectory)Config\Sample.NuGet.config</NuGetConfigPath>
+      <NuGetConfigContents><![CDATA[<?xml version="1.0" encoding="utf-8"?>
+<configuration>
+  <packageSources>
+    <add key="BackendSampleTempSource" value="]]>$(PackageRepositoryFolder)<![CDATA[" />
+  </packageSources>
+</configuration>
+      ]]>
+      </NuGetConfigContents>
+    </PropertyGroup>
+    
+    <WriteLinesToFile
+      Condition="!Exists('$(NuGetConfigPath)')"
+      File="$(NuGetConfigPath)"
+      Overwrite="true"
+      Encoding="UTF-8"
+      Lines="$(NuGetConfigContents)"
+      />
+    
+    <MakeDir
+      Condition="!Exists('$(PackageRepositoryFolder)')"
+      Directories="$(PackageRepositoryFolder)"
+      />
+      
+    <Exec
+      Command="&quot;$(MSBuildBinPath)\MSBuild.exe&quot; /t:Restore &quot;$(MSBuildThisFileDirectory)\SampleBackendOperation\SampleBackendOperation.csproj&quot;"
+      />
+    <Exec
+      Command="&quot;$(MSBuildBinPath)\MSBuild.exe&quot; /t:Restore &quot;$(MSBuildThisFileDirectory)\SampleBackendLogin\SampleBackendLogin.csproj&quot;"
+      />
+    
+    <MSBuild
+      Projects="$(MSBuildThisFileDirectory)\SampleBackendOperation\SampleBackendOperation.csproj;$(MSBuildThisFileDirectory)\SampleBackendLogin\SampleBackendLogin.csproj"
+      Targets="Build"
+      UnloadProjectsOnCompletion="true"
+      Properties="Configuration=Debug"
+      />
+  </Target>
+  
+  <Target Name="StartServer">
+    <PropertyGroup>
+      <ServerRunnerPath>$(MSBuildThisFileDirectory)\Execution\StartServer.build</ServerRunnerPath>
+    </PropertyGroup>
+    
+    <!-- We must use exec, since the properties provided by UtilPack.NuGet.MSBuild won't be visible otherwise. -->
+    <Exec
+      Command="&quot;$(MSBuildBinPath)\MSBuild.exe&quot; /t:Restore &quot;$(ServerRunnerPath)&quot;"
+      />
+    
+    <MSBuild
+      Projects="$(ServerRunnerPath)"
+      Targets="StartServerAsync"
+      UnloadProjectsOnCompletion="true"
+      Properties="DeploymentDirectory=$(DeploymentDirectory)"
+      />
+  </Target>
+</Project>

@@ -1,0 +1,37 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>netstandard1.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="UtilPack.NuGet.MSBuild" Version="1.0.0"/>
+  </ItemGroup>
+  
+  <UsingTask
+    Condition=" '$(UtilPackNuGetMSBuildAssemblyPath)' != '' "
+    TaskFactory="UtilPack.NuGet.MSBuild.NuGetTaskRunnerFactory"
+    AssemblyFile="$(UtilPackNuGetMSBuildAssemblyPath)"
+    TaskName="UtilPack.NuGet.Deployment.MSBuild.DeployNuGetPackageTask"
+  >
+    <Task>
+      <NuGetTaskInfo>
+        <PackageID>UtilPack.NuGet.Deployment.MSBuild</PackageID>
+        <PackageVersion>1.0.0</PackageVersion>
+      </NuGetTaskInfo>
+    </Task>
+  </UsingTask>
+   
+  <Target Name="DeploySample">
+    
+    <PropertyGroup>
+      <DeploymentDirectory Condition=" '$(DeploymentDirectory)' == '' ">$(MSBuildThisFileDirectory)\..\ProcessRunner</DeploymentDirectory>
+    </PropertyGroup>
+      
+    <UtilPack.NuGet.Deployment.MSBuild.DeployNuGetPackageTask
+      ProcessPackageID="UtilPack.NuGet.ProcessRunner"
+      ProcessPackageVersion="1.0.0"
+      ProcessFramework="netcoreapp1.1"
+      TargetDirectory="$(DeploymentDirectory)"
+    />
+  </Target>
+</Project>

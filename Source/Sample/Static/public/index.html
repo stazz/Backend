@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Public Login Page</title>
+    <script>
+    if ('serviceWorker' in navigator) {  
+      window.addEventListener('load', function() {
+        navigator.serviceWorker.register('/sw.js').then(function(registration) {
+          // Success
+          console.log('Successful service worker registration: ', registration);
+          //navigator.serviceWorker.controller.postMessage('MESSAAGGG');
+        }, function(error) {
+          console.error('Error in service worker registration:', error);
+        });
+      });
+    }
+    </script>
+    <script src="scripts.js"></script>
+</head>
+<body>
+  <noscript>This page requires JavaScript to function. Reload this page after enabling JavaScript.</noscript>
+
+  <h1>Welcome to sample login page</h1>
+  <p>This page is located in Static/public folder of this sample. Please login to proceed.</p>
+  <p>Hint: the sample backend is configured to accept "sample" as both username and password.</p>
+  <div>
+<form class="login-form">
+  <input id="login-username" type="text" placeholder="username" />
+  <input id="login-password" type="password" placeholder="password" />
+  <button type="button" id="login-button">Login</button>
+</form>
+  </div>
+  <div id="error-info"></div>
+  
+  <script>
+
+  var username = document.getElementById("login-username");
+  var pw = document.getElementById("login-password");
+  var errorInfo = document.getElementById("error-info");
+  
+  document.getElementById("login-button").addEventListener("click", function() {
+    var usernameValue = username.value;
+    var pwValue = pw.value;
+    username.value = "";
+    pw.value = "";
+
+    // sendBackendOpFunc is from scripts.js
+    sendBackendOpFunc(
+      "POST",
+      "login",
+      {
+        username: usernameValue,
+        password: pwValue,
+      }).then(function(responseInfo) {
+        if (responseInfo.response) {
+          // Success, redirect to private assets page
+          window.location.assign("/application/");
+        } else {
+          errorInfo.innerHTML = "Please use \"sample\" as both username and password!";
+        }
+      });
+  });
+  </script>
+</body>
+</html>
