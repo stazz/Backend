@@ -19,8 +19,10 @@ using Backend.Core;
 using Backend.HTTP.Common;
 using Microsoft.AspNetCore.Http;
 using System;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using UtilPack;
 using UtilPack.Configuration;
 
 namespace Backend.HTTP.Server.Logout
@@ -59,9 +61,9 @@ namespace Backend.HTTP.Server.Logout
          AuthenticatorAggregator<HttpRequest, HttpContext> authenticators
          )
       {
-         foreach ( var authSchema in authenticators.AuthenticationSchemas )
+         foreach ( var authenticator in authenticators.AuthenticationSchemas.SelectMany( schema => authenticators.GetAuthenticators( schema ) ?? Empty<Authenticator<HttpContext>>.Enumerable ) )
          {
-            authenticators.GetAuthenticator( context.Request, authSchema )?.UnregisterUser( context );
+            authenticator.UnregisterUser( context );
          }
 
          return null;

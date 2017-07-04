@@ -67,7 +67,7 @@ namespace Backend.HTTP.Server.HeaderAuthenticator
       {
          response.Headers[this._headerName] = authID;
          // return true to signal that response can be sent
-         return new ValueTask<bool>( true );
+         return new ValueTask<Boolean>( true );
       }
    }
 

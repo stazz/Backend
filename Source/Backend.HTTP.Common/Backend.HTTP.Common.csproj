@@ -8,7 +8,6 @@
     <CheckForOverflowUnderflow>True</CheckForOverflowUnderflow>
     <TreatWarningsAsErrors>True</TreatWarningsAsErrors>
     <TreatSpecificWarningsAsErrors />
-    <NuGetPushOnBuildFile>$([MSBuild]::GetPathOfFileAbove(NuGetPushOnBuild.targets))</NuGetPushOnBuildFile>
   </PropertyGroup>
 
   <ItemGroup>
@@ -18,6 +17,60 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore" Version="1.1.2" />
   </ItemGroup>
+  
+  <!-- Assembly information stuff -->
+  <PropertyGroup>
+    <VersionPrefix>0.0.1</VersionPrefix>
+    <VersionSuffix>alpha</VersionSuffix>
+    <Authors>Stanislav Muhametsin</Authors>
+    <Company>Cometa Solutions Ltd</Company>
+    <NeutralLanguage>en-US</NeutralLanguage>
+    <AssemblyTitle>$(AssemblyName)</AssemblyTitle>
+    <Product>Backend</Product>
+    <Description>Library containing abstractions for backends communicating with frontends using HTTP protocol.</Description>
+    <Copyright>Stanislav Muhametsin</Copyright>
+    <AssemblyOriginatorKeyFilePath>$(MSBuildProjectDirectory)\..\..\Keys\$(Product).snk</AssemblyOriginatorKeyFilePath>
+  </PropertyGroup>
+
+  <!-- Assembly signing stuff -->
+  <PropertyGroup Condition="'$(Configuration)' == 'Release' and Exists('$(AssemblyOriginatorKeyFilePath)')">
+    <AssemblyOriginatorKeyFile>$(AssemblyOriginatorKeyFilePath)</AssemblyOriginatorKeyFile>
+    <SignAssembly>true</SignAssembly>
+  </PropertyGroup>
+
+  <!-- Disable all debug information in release mode-->
+  <PropertyGroup Condition=" '$(Configuration)' == 'Release'">
+    <DebugType>none</DebugType>
+    <DebugSymbols>False</DebugSymbols>
+    <!--<GenerateDocumentationFile>true</GenerateDocumentationFile>-->
+  </PropertyGroup>
+
+  <!-- NuGet package stuff -->
+  <PropertyGroup>
+    <PackageId>$(AssemblyName)</PackageId>
+    <PackageVersion>$(VersionPrefix)</PackageVersion>
+    <PackageVersion Condition=" '$(VersionSuffix)' != ''">$(PackageVersion)-$(VersionSuffix)</PackageVersion>
+    <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
+    <PackageReleaseNotes>Initial release.</PackageReleaseNotes>
+    <PackageTags>backend server core http</PackageTags>
+    <Title>Backend HTTP Abstractions</Title>
+    <RepositoryUrl>https://github.com/CometaSolutions/Backend</RepositoryUrl>
+    <PackageProjectUrl>$(PackageProjectUrl)</PackageProjectUrl>
+    <PackageLicenseUrl>https://www.apache.org/licenses/LICENSE-2.0</PackageLicenseUrl>
+  </PropertyGroup>
+
+  <!--
+  At least currently (9.5.2017) modifying VersionPrefix/VersionSuffix will cause the assemblyinfo.cs file to regenerate, but with old version strings (??).
+  So... manually delete the file first when building in release mode.
+  If we put BeforeTargets="Build", this will be executed *after* the target which generates the assembly info, so we must put the correct target in BeforeTargets attribute.
+  -->
+  <Target Name="DeleteAssemblyInfoFile" BeforeTargets="CoreGenerateAssemblyInfo">
+    <Delete Condition=" '$(Configuration)' == 'Release' " Files="$(IntermediateOutputPath)$(MSBuildProjectName).AssemblyInfo.cs" />
+  </Target>
+
+  <PropertyGroup>
+    <NuGetPushOnBuildFile>$([MSBuild]::GetPathOfFileAbove(NuGetPushOnBuild.targets))</NuGetPushOnBuildFile>
+  </PropertyGroup>
 
   <Import Project="$(NuGetPushOnBuildFile)" Condition="Exists('$(NuGetPushOnBuildFile)')" />
 </Project>

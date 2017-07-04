@@ -32,9 +32,8 @@ namespace Backend.Core
 
    public interface AuthenticatorAggregator<in TMatchContext, in TContext> : AuthenticatorAggregator
    {
-      // TODO consider making GetAuthenticatorForAuthentication, as when doing login, usually the required header/query param is missing!
-
       Authenticator<TContext> GetAuthenticator( TMatchContext searchContext, String schema, Boolean isAuthenticationAttempt = false );
+      IEnumerable<Authenticator<TContext>> GetAuthenticators( String schema );
 
       Task ProceedWhenNoAuthenticatorFound( TContext context );
    }
@@ -93,6 +92,12 @@ namespace Backend.Core
       {
          this._checkers.TryGetValue( schema ?? "", out var authenticators );
          return authenticators?.FirstOrDefault( authenticator => authenticator.CanBeUsed( matchContext, isAuthenticationAttempt ) );
+      }
+
+      public IEnumerable<Authenticator<TContext>> GetAuthenticators( String schema )
+      {
+         this._checkers.TryGetValue( schema ?? "", out var retVal );
+         return retVal?.Skip( 0 );
       }
 
       public IEnumerable<String> AuthenticationSchemas

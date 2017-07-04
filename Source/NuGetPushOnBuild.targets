@@ -6,14 +6,22 @@
   </PropertyGroup>
   
   <Import Project="$(NuGetPushSourcesFile)" Condition="Exists('$(NuGetPushSourcesFile)')" />
-  
+   
   <!-- 
     Setting GeneratePackageOnBuild to true will cause Pack target to be run.
     Our target will run after Pack.
     -->
   <Target 
-    Name="NuGetPush"
+    Name="_NuGetPush"
     AfterTargets="Pack"
+    >
+    <CallTarget 
+      Targets="NuGetPush"
+      Condition=" '$(GeneratePackageOnBuild)' == 'true' "/>
+  </Target>
+  
+  <Target 
+    Name="NuGetPush"
     >
     <!-- We must perform actual push in via other file, as we don't want to get UtilPack.NuGet.MSBuild dependency. -->
     <PropertyGroup>
