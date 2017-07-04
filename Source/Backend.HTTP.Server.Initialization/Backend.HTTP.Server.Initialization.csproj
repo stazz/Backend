@@ -53,7 +53,7 @@
     <PackageTags>backend server core http server initialization</PackageTags>
     <Title>Backend HTTP Server Initialization</Title>
     <RepositoryUrl>https://github.com/CometaSolutions/Backend</RepositoryUrl>
-    <PackageProjectUrl>$(PackageProjectUrl)</PackageProjectUrl>
+    <PackageProjectUrl>$(RepositoryUrl)</PackageProjectUrl>
     <PackageLicenseUrl>https://www.apache.org/licenses/LICENSE-2.0</PackageLicenseUrl>
   </PropertyGroup>
 

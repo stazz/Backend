@@ -52,7 +52,7 @@
     <PackageTags>backend server core initialization dynamic assembly load</PackageTags>
     <Title>Backend Common Initialization</Title>
     <RepositoryUrl>https://github.com/CometaSolutions/Backend</RepositoryUrl>
-    <PackageProjectUrl>$(PackageProjectUrl)</PackageProjectUrl>
+    <PackageProjectUrl>$(RepositoryUrl)</PackageProjectUrl>
     <PackageLicenseUrl>https://www.apache.org/licenses/LICENSE-2.0</PackageLicenseUrl>
   </PropertyGroup>
 

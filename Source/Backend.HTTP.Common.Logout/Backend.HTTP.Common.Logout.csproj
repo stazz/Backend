@@ -55,7 +55,7 @@
     <PackageTags>backend server core http logout</PackageTags>
     <Title>Backend HTTP Logout Module</Title>
     <RepositoryUrl>https://github.com/CometaSolutions/Backend</RepositoryUrl>
-    <PackageProjectUrl>$(PackageProjectUrl)</PackageProjectUrl>
+    <PackageProjectUrl>$(RepositoryUrl)</PackageProjectUrl>
     <PackageLicenseUrl>https://www.apache.org/licenses/LICENSE-2.0</PackageLicenseUrl>
   </PropertyGroup>
 
