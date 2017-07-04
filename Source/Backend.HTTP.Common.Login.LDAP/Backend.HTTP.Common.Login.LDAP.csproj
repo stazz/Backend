@@ -33,10 +33,11 @@
   </PropertyGroup>
 
   <!-- Assembly signing stuff -->
-  <PropertyGroup Condition="'$(Configuration)' == 'Release' and Exists('$(AssemblyOriginatorKeyFilePath)')">
+  <!-- TODO Novell.Directory.Ldap.NETStandard is not signed assembly - once CBAM has LDAP functionality, use that instead! -->
+  <!--<PropertyGroup Condition="'$(Configuration)' == 'Release' and Exists('$(AssemblyOriginatorKeyFilePath)')">
     <AssemblyOriginatorKeyFile>$(AssemblyOriginatorKeyFilePath)</AssemblyOriginatorKeyFile>
     <SignAssembly>true</SignAssembly>
-  </PropertyGroup>
+  </PropertyGroup>-->
 
   <!-- Disable all debug information in release mode-->
   <PropertyGroup Condition=" '$(Configuration)' == 'Release'">
