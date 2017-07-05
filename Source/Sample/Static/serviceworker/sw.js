@@ -1,3 +1,4 @@
+// Note - this is "special" Service Worker in such way that it does not do any caching - it only handles authentication aspect of the web application!
 console.log('Service worker initializing: ', self);
 
 // Install & Activate from https://davidwalsh.name/service-worker-claim
