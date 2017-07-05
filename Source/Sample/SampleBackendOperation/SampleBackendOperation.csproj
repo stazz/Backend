@@ -11,7 +11,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Backend.HTTP.Common.Skeletons" Version="1.0.0" />
+    <PackageReference Include="Backend.HTTP.Common.Skeletons" Version="0.0.1-alpha" />
     <PackageReference Include="UtilPack.Configuration" Version="1.0.1" />
   </ItemGroup>
   

@@ -29,7 +29,7 @@
     </PropertyGroup>
       
     <UtilPack.MSBuild.AsyncExec.AsyncExecTask
-      Command="start dotnet &quot;$(DeploymentDirectory)\UtilPack.NuGet.ProcessRunner.dll&quot; /ProcessPackageID=Backend.HTTP.Server.Runner /ProcessPackageVersion=1.0.0 /DeploymentKind=CopyNonSDKAssemblies /ShutdownSemaphoreProcessArgument=ShutdownSemaphoreName /RestartSemaphoreProcessArgument=RestartSemaphoreName &quot;/ProcessArgument:ConfigurationFile=$(ServerConfigurationPath)&quot; /ProcessArgument:WatchComponentAssemblies=true /ProcessArgument:WatchServerConfigFile=true"
+      Command="start dotnet &quot;$(DeploymentDirectory)\UtilPack.NuGet.ProcessRunner.dll&quot; /ProcessPackageID=Backend.HTTP.Server.Runner /ProcessPackageVersion=0.0.1-alpha /DeploymentKind=CopyNonSDKAssemblies /ShutdownSemaphoreProcessArgument=ShutdownSemaphoreName /RestartSemaphoreProcessArgument=RestartSemaphoreName &quot;/ProcessArgument:ConfigurationFile=$(ServerConfigurationPath)&quot; /ProcessArgument:WatchComponentAssemblies=true /ProcessArgument:WatchServerConfigFile=true"
     />
   </Target>
 </Project>

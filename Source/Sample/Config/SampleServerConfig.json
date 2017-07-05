@@ -6,7 +6,7 @@
   {
     "Type": {
       "PackageID": "Backend.HTTP.Common.StaticFiles",
-      "PackageVersion": "1.0.0"
+      "PackageVersion": "0.0.1-alpha"
     },
     "Configuration": {
       "MatchPath": "public(/?.*)",
@@ -16,7 +16,7 @@
   {
     "Type": {
       "PackageID": "Backend.HTTP.Common.StaticFiles",
-      "PackageVersion": "1.0.0"
+      "PackageVersion": "0.0.1-alpha"
     },
     "Configuration": {
       "RequiredAuthenticationSchema": "",
@@ -27,7 +27,7 @@
   {
     "Type": {
       "PackageID": "Backend.HTTP.Common.StaticFiles",
-      "PackageVersion": "1.0.0"
+      "PackageVersion": "0.0.1-alpha"
     },
     "Configuration": {
       "MatchPath": "(sw.js)",
@@ -47,7 +47,7 @@
   {
     "Type": {
       "PackageID": "Backend.HTTP.Common.Login",
-      "PackageVersion": "1.0.0"
+      "PackageVersion": "0.0.1-alpha"
     },
     "Configuration": {
       "MatchPath": "operation/login",
@@ -64,7 +64,7 @@
       "UserIDTransformerConfiguration": {
         "Type": {
           "PackageID": "Backend.HTTP.Common.DigestTransformer",
-          "PackageVersion": "1.0.0"
+          "PackageVersion": "0.0.1-alpha"
         },
         "Configuration": {
           "Base64EncodeShuffleSeed": 400
@@ -75,7 +75,7 @@
   {
     "Type": {
       "PackageID": "Backend.HTTP.Common.Logout",
-      "PackageVersion": "1.0.0"
+      "PackageVersion": "0.0.1-alpha"
     },
     "Configuration": {
       "MatchPath": "operation/logout",
@@ -104,7 +104,7 @@
     {
       "Type": {
         "PackageID": "Backend.HTTP.Common.HeaderAuthenticator",
-        "PackageVersion": "1.0.0"
+        "PackageVersion": "0.0.1-alpha"
       },
       "Configuration": {
         "HeaderName": "X-SampleAuth",
