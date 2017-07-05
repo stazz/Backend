@@ -19,7 +19,9 @@ TODO instructions for manual set up.
 Once the server has started up (the first startup might be quite slow, as all required packages are downloaded), it should stop at text `Now listening on: https://localhost:5413`.
 Then, you can fire up browser and navigate to the `https://localhost:5413/public/` address, and follow instructions on the page to test out the sample.
 
-**Note for Chrome!** You must start Chrome with arguments `--ignore-certificate-errors --unsafely-treat-insecure-origin-as-secure=https://localhost:5413 --user-data-dir=/path/to/some/directory`.
+**Note for Firefox!** Because the sample uses self-signed certificate, you will get a warning. You must click on 'Advanced' and then 'Add exception' in order to proceed.
+
+**Note for Chrome!** Because the sample uses self-signed ceritificate, you must start Chrome with arguments `--ignore-certificate-errors --unsafely-treat-insecure-origin-as-secure=https://localhost:5413 --user-data-dir=/path/to/some/directory`.
 Otherwise you will get SSL errors and the sample won't work, since [Service Worker](https://developers.google.com/web/fundamentals/getting-started/primers/service-workers) won't load.
 
 **Note for Edge!** Currently, Service Workers are not yet implemented in Edge. Please use Firefox or Chrome instead.
@@ -30,7 +32,7 @@ The sample itself demonstrates how authentication aspect of application can be c
 The `InitializeSample.build` will start a process watcher process ([UtilPack.NuGet.ProcessRunner](https://github.com/CometaSolutions/UtilPack/tree/develop/Source/UtilPack.NuGet.ProcessRunner)) and pass arguments which signal the watcher process which package to run and monitor, and that graceful shutdown and restart are supported.
 The process watcher will then install the `Backend.HTTP.Server.Runner` NuGet package, and start it up - this will be the actual HTTP server.
 
-The `Backend.HTTP.Server.Runner` process will then read configuration file located in [./Config/SampleServerConfig.json], and dynamically load NuGet packages specified in there, along with some connection and certificate information.
+The `Backend.HTTP.Server.Runner` process will then read configuration file located in (./Config/SampleServerConfig.json), and dynamically load NuGet packages specified in there, along with some connection and certificate information.
 The _response creator_s which are described in that file are the NuGet packages that produce some output for some HTTP request matching their matcher.
 Currently, there exists one matcher: regexp-based matcher, which will match the path.
 The code in [./SampleBackendOperation/Operation.cs] will be run on paths which are exactly `/operation/SampleBackendOperation`, as specified in the configuration file.
