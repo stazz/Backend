@@ -29,7 +29,7 @@ Otherwise you will get SSL errors and the sample won't work, since [Service Work
 The sample itself demonstrates how authentication aspect of application can be completely implemented by a Service Worker, and also how to put files and operations behind authentication guard.
 
 # How it works
-The `InitializeSample.build` will start a process watcher process ([UtilPack.NuGet.ProcessRunner](https://github.com/CometaSolutions/UtilPack/tree/develop/Source/UtilPack.NuGet.ProcessRunner)) and pass arguments which signal the watcher process which package to run and monitor, and that graceful shutdown and restart are supported.
+The `InitializeSample.build` will start a process watcher process ([UtilPack.NuGet.ProcessRunner](https://github.com/CometaSolutions/UtilPack/tree/develop/Source/UtilPack.NuGet.ProcessRunner)) and pass arguments to signal the watcher process which package to run and monitor, and that graceful shutdown and restart are supported.
 The process watcher will then install the `Backend.HTTP.Server.Runner` NuGet package, and start it up - this will be the actual HTTP server.
 
 The `Backend.HTTP.Server.Runner` process will then read configuration file located in [configuration file](./Config/SampleServerConfig.json), and dynamically load NuGet packages specified in there, along with some connection and certificate information.
