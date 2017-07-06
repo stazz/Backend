@@ -29,6 +29,7 @@ Otherwise you will get SSL errors and the sample won't work, since [Service Work
 The sample itself demonstrates how authentication aspect of application can be completely implemented by a Service Worker, and also how to put files and operations behind authentication guard.
 
 # How it works
+## Backend
 The `InitializeSample.build` will start a process watcher process ([UtilPack.NuGet.ProcessRunner](https://github.com/CometaSolutions/UtilPack/tree/develop/Source/UtilPack.NuGet.ProcessRunner)) and pass arguments to signal the watcher process which package to run and monitor, and that graceful shutdown and restart are supported.
 The process watcher will then install the `Backend.HTTP.Server.Runner` NuGet package, and start it up - this will be the actual HTTP server.
 
@@ -39,6 +40,7 @@ The code in [Sample backend operation](./SampleBackendOperation/Operation.cs) wi
 For simplicity's sake, the sample operation is **not** authentication-guarded, as the class in the source file extends `PublicResponseCreator` instead of `AuthenticationGuardedResponseCreator`.
 The code in [Sample login provider](./SampleBackendLogin/LoginProvider.cs) contains login provider used by `Backend.HTTP.Common.Login` response creator, and it contains some very simplistic login functionality, as e.g. LDAP login functionality would be too complicated for this sample.
 
+## Frontend
 On frontend side, the static files served are in [Static](./Static) directory.
 The `public` directory contains files which do not require authentication, whereas `private` directory will require authenticated client in order for the client to see files located there.
 The `serviceworker` directory contains the Service Worker JavaScript file, which does not require authentication to load.
