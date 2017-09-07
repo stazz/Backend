@@ -2,7 +2,8 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>netcoreapp1.1</TargetFramework>
+    <TargetFramework>netcoreapp2.0</TargetFramework>
+    <LangVersion>7.1</LangVersion>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -11,9 +12,6 @@
     <TreatSpecificWarningsAsErrors />
   </PropertyGroup>
 
-  <ItemGroup>
-    <PackageReference Include="Microsoft.Extensions.Configuration.CommandLine" Version="1.1.2" />
-  </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Backend.HTTP.Server.Initialization\Backend.HTTP.Server.Initialization.csproj" />
@@ -21,8 +19,8 @@
 
   <!-- Assembly information stuff -->
   <PropertyGroup>
-    <VersionPrefix>0.0.1</VersionPrefix>
-    <VersionSuffix>alpha</VersionSuffix>
+    <VersionPrefix>0.1.0</VersionPrefix>
+    <VersionSuffix>beta</VersionSuffix>
     <Authors>Stanislav Muhametsin</Authors>
     <Company>Cometa Solutions Ltd</Company>
     <NeutralLanguage>en-US</NeutralLanguage>
@@ -52,7 +50,7 @@
     <PackageVersion>$(VersionPrefix)</PackageVersion>
     <PackageVersion Condition=" '$(VersionSuffix)' != ''">$(PackageVersion)-$(VersionSuffix)</PackageVersion>
     <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
-    <PackageReleaseNotes>Initial release.</PackageReleaseNotes>
+    <PackageReleaseNotes>Updated to ASP.NET Core 2.0.</PackageReleaseNotes>
     <PackageTags>backend server core http server runner</PackageTags>
     <Title>Backend HTTP Server Runner</Title>
     <RepositoryUrl>https://github.com/CometaSolutions/Backend</RepositoryUrl>

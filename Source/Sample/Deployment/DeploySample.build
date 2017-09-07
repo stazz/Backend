@@ -4,7 +4,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="UtilPack.NuGet.MSBuild" Version="1.0.0"/>
+    <PackageReference Include="UtilPack.NuGet.MSBuild" Version="1.1.1"/>
   </ItemGroup>
   
   <UsingTask
@@ -29,7 +29,7 @@
       
     <UtilPack.NuGet.Deployment.MSBuild.DeployNuGetPackageTask
       ProcessPackageID="UtilPack.NuGet.ProcessRunner"
-      ProcessPackageVersion="1.0.0"
+      ProcessPackageVersion="1.1.1"
       ProcessFramework="netcoreapp1.1"
       TargetDirectory="$(DeploymentDirectory)"
     />

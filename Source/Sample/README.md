@@ -6,7 +6,12 @@ This folder contains files and folders which aim to demonstrate on how HTTP-rela
 ## Automatic
 To initialize and start sample, only one command is required: run MSBuild for `InitializeSample.build` in this folder and give target `InitializeSample` as argument, like this (assuming you're in the root directory of this repository):
 ```
-"c:\Program Files (x86)\Microsoft Visual Studio\2017\Community\MSBuild\15.0\Bin\MSBuild.exe" /t:InitializeSample Source\Sample\InitializeSample.build"
+"c:\Program Files (x86)\Microsoft Visual Studio\2017\Community\MSBuild\15.0\Bin\MSBuild.exe" /t:InitializeSample Source\Sample\InitializeSample.build
+```
+
+Or if you're running .NET Core, simply do:
+```
+dotnet msbuild /t:InitializeSample Source\Sample\InitializeSample.build
 ```
 
 This command will take care of downloading and installing any missing NuGet packages, and start up server monitor with correct arguments.
@@ -35,7 +40,7 @@ The process watcher will then install the `Backend.HTTP.Server.Runner` NuGet pac
 
 The `Backend.HTTP.Server.Runner` process will then read configuration file located in [configuration file](./Config/SampleServerConfig.json), and dynamically load NuGet packages specified in there, along with some connection and certificate information.
 The _response creators_, which are described in the configuration file, are the NuGet packages that produce some output for some HTTP request matching their matcher.
-Currently, there exists one matcher: regexp-based matcher, which will match the path.
+Currently, there exists one matcher: regexp-based matcher, which will match the path against the regular expression provided in configuration file.
 The code in [Sample backend operation](./SampleBackendOperation/Operation.cs) will be run when the URL path is exactly `/operation/SampleBackendOperation`, as specified in the configuration file.
 For simplicity's sake, the sample operation is **not** authentication-guarded, as the class in the source file extends `PublicResponseCreator` instead of `AuthenticationGuardedResponseCreator`.
 The code in [Sample login provider](./SampleBackendLogin/LoginProvider.cs) contains login provider used by `Backend.HTTP.Common.Login` response creator, and it contains some very simplistic login functionality, as e.g. LDAP login functionality would be too complicated for this sample.

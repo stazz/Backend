@@ -184,19 +184,20 @@ self.addEventListener('activate', function(evt) {
     var isLogout = request.url.startsWith( logoutURL );
     var responsePromise;
     if ( isLogin || isLogout ) {
-      var prePromise;
+      //var prePromise;
       var seenAuthToken = authToken;
       if ( isLogout ) {
         // Logout is special - we need to clear auth token and all stuff from DB
+        //prePromise = request.text();
         authToken = doLogout();
       } else {
         // Login is special - we need to save auth token in case of successful login
         // Set auth header in case we have old, still working auth token so backend won't need to generate new one
         // Since we are modifying request, we must make a copy of it.
-        prePromise = request.text();
+        //prePromise = ;
       }
 
-      responsePromise = prePromise.then( function(fd) {
+      responsePromise = request.text().then( function(fd) {
           var opts =
           {
             method: request.method,

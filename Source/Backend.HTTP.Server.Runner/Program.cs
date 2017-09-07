@@ -48,7 +48,7 @@ namespace Backend.HTTP.Server.Runner
       public const String CONFIGURATION_SERVER_STATE_FILE_PATH = "RestartStateFilePath";
       public const String CONFIGURATION_RESTART_SEMAPHORE_NAME = "RestartSemaphoreName";
 
-      static Int32 Main( String[] args )
+      static async Task<Int32> Main( String[] args )
       {
          var source = new CancellationTokenSource();
          Console.CancelKeyPress += ( s, e ) =>
@@ -60,7 +60,7 @@ namespace Backend.HTTP.Server.Runner
          TWebHostSetupInfo setupInfo;
          try
          {
-            setupInfo = CreateWebHostAsync( args, source ).GetAwaiter().GetResult();
+            setupInfo = await CreateWebHostAsync( args, source );
          }
          catch ( OperationCanceledException )
          {
@@ -84,7 +84,7 @@ namespace Backend.HTTP.Server.Runner
          if ( setupInfo.IsFirst )
          {
 
-            retVal = RunServerAsync( source, setupInfo.First ).GetAwaiter().GetResult();
+            retVal = await RunServerAsync( source, setupInfo.First );
          }
          else
          {
@@ -234,16 +234,13 @@ namespace Backend.HTTP.Server.Runner
          return retVal;
       }
 
-      private static Task<ServerTaskRunResult> KeepRunningServer(
+      private static async Task<ServerTaskRunResult> KeepRunningServer(
          IWebHost server,
          CancellationToken token
          )
       {
-         return Task.Run( () =>
-         {
-            server.Run( token );
-            return ServerTaskRunResult.Shutdown;
-         } );
+         await server.RunAsync( token );
+         return ServerTaskRunResult.Shutdown;
       }
 
       private static async Task<ServerTaskRunResult> KeepRunningBackgroundChecks(

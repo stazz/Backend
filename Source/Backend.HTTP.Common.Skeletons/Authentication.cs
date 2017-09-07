@@ -41,6 +41,7 @@ namespace Backend.HTTP.Common
          )
       {
          this._authData = ArgumentValidator.ValidateNotNull( nameof( authDataHolder ), authDataHolder );
+         this.IsDefault = configuration.IsDefault;
 
          this._authIDByteCount = Math.Max( 1, configuration.AuthenticationTokenByteCount );
          this._expirationTime = configuration.AuthenticationTokenExpirationTime;
@@ -58,6 +59,8 @@ namespace Backend.HTTP.Common
       }
 
       public abstract Boolean CanBeUsed( HttpRequest matchContext, Boolean isAuthenticationAttempt );
+
+      public Boolean IsDefault { get; }
 
       public ValueTask<ChallengeResult> ChallengeAsync(
          HttpContext context
@@ -135,6 +138,7 @@ namespace Backend.HTTP.Common
       public Int64 AuthenticationTokenBase64ShuffleSeed { get; set; }
       public Int32 AuthenticationTokenByteCount { get; set; } = 32;
       public TimeSpan AuthenticationTokenExpirationTime { get; set; } = TimeSpan.FromHours( 3 ); // 3 hours
+      public Boolean IsDefault { get; set; }
    }
 
 

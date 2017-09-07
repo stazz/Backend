@@ -7,6 +7,11 @@
     <DeploymentDirectory>$(MSBuildThisFileDirectory)\ProcessRunner</DeploymentDirectory>
   </PropertyGroup>
   
+  <PropertyGroup Condition=" '$(MSBuildExecCMD)' == '' ">
+    <MSBuildExecCMD Condition=" '$(MSBuildRuntimeType)' == 'Core' ">dotnet msbuild</MSBuildExecCMD>
+    <MSBuildExecCMD Condition=" '$(MSBuildRuntimeType)' != 'Core' ">"$(MSBuildBinPath)\MSBuild.exe"</MSBuildExecCMD>
+  </PropertyGroup>
+  
   <Target Name="InitializeSample">
     <PropertyGroup>
       <TargetsToCall>BuildSampleOperation</TargetsToCall>
@@ -21,7 +26,7 @@
   
     <!-- We must use exec, since the properties provided by UtilPack.NuGet.MSBuild won't be visible otherwise. -->
     <Exec
-      Command="&quot;$(MSBuildBinPath)\MSBuild.exe&quot; /t:Restore &quot;$(MSBuildThisFileDirectory)\Deployment\DeploySample.build&quot;"
+      Command="$(MSBuildExecCMD) /t:Restore &quot;$(MSBuildThisFileDirectory)\Deployment\DeploySample.build&quot;"
       />
     
     <MSBuild
@@ -30,10 +35,6 @@
       UnloadProjectsOnCompletion="true"
       Properties="DeploymentDirectory=$(DeploymentDirectory)"
       />
-  </Target>
-  
-  <Target Name="StartProcessRunner">
-    <!-- Startup\StartServer.build -->
   </Target>
   
   <Target Name="BuildSampleOperation">
@@ -65,10 +66,10 @@
       />
       
     <Exec
-      Command="&quot;$(MSBuildBinPath)\MSBuild.exe&quot; /t:Restore &quot;$(MSBuildThisFileDirectory)\SampleBackendOperation\SampleBackendOperation.csproj&quot;"
+      Command="$(MSBuildExecCMD) /t:Restore &quot;$(MSBuildThisFileDirectory)\SampleBackendOperation\SampleBackendOperation.csproj&quot;"
       />
     <Exec
-      Command="&quot;$(MSBuildBinPath)\MSBuild.exe&quot; /t:Restore &quot;$(MSBuildThisFileDirectory)\SampleBackendLogin\SampleBackendLogin.csproj&quot;"
+      Command="$(MSBuildExecCMD) /t:Restore &quot;$(MSBuildThisFileDirectory)\SampleBackendLogin\SampleBackendLogin.csproj&quot;"
       />
     
     <MSBuild
@@ -86,7 +87,7 @@
     
     <!-- We must use exec, since the properties provided by UtilPack.NuGet.MSBuild won't be visible otherwise. -->
     <Exec
-      Command="&quot;$(MSBuildBinPath)\MSBuild.exe&quot; /t:Restore &quot;$(ServerRunnerPath)&quot;"
+      Command="$(MSBuildExecCMD) /t:Restore &quot;$(ServerRunnerPath)&quot;"
       />
     
     <MSBuild

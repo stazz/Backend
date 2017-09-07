@@ -23,6 +23,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 using UtilPack;
@@ -101,7 +102,6 @@ namespace Backend.HTTP.Server
             throw new ArgumentNullException( nameof( runningConfiguration ) );
          }
 
-         var loggerFactory = new ConsoleErrorLoggerProvider();
          var hostBuilder = new WebHostBuilder();
 
          var creationParams = new ResponseCreatorInstantiationParameters(
@@ -120,8 +120,27 @@ namespace Backend.HTTP.Server
             creators
             );
 
+         async Task<IPEndPoint[]> URLToEndPoints( String url )
+         {
+            IPEndPoint[] eps;
+            if ( Uri.TryCreate( "dummy://" + url, UriKind.Absolute, out var uri ) )
+            {
+               eps = ( IPAddress.TryParse( uri.Host, out var addr ) ? new[] { addr } : await Dns.GetHostAddressesAsync( uri.Host ) )
+                  .Select( address => new IPEndPoint( address, uri.Port < 0 ? 443 : uri.Port ) )
+                  .ToArray();
+            }
+            else
+            {
+               eps = Empty<IPEndPoint>.Array;
+            }
+            return eps;
+         }
+
+         var endpoints = ( await Task.WhenAll( runningConfiguration.URLs.Select( url => URLToEndPoints( url ) ) ) )
+            .SelectMany( ep => ep ).ToArray();
+
          hostBuilder
-            .UseLoggerFactory( loggerFactory )
+            .ConfigureLogging( ctx => new ConsoleErrorLoggerProvider() )
             .UseKestrel( options =>
             {
                // Run callback for options
@@ -132,14 +151,22 @@ namespace Backend.HTTP.Server
 
                // Disable the server info (which will be "Kestrel")
                options.AddServerHeader = false;
+               options.AllowSynchronousIO = false;
+
 
                // Configure https
-               options.UseHttps( new Microsoft.AspNetCore.Server.Kestrel.Https.HttpsConnectionFilterOptions()
+               foreach ( var ep in endpoints )
                {
-                  ClientCertificateMode = Microsoft.AspNetCore.Server.Kestrel.Https.ClientCertificateMode.NoCertificate,
-                  ServerCertificate = new System.Security.Cryptography.X509Certificates.X509Certificate2( runningConfiguration.CertificateFile, runningConfiguration.CertificatePassword ),
-                  SslProtocols = System.Security.Authentication.SslProtocols.Tls12
-               } );
+                  options.Listen( ep, listenOptions =>
+                  {
+                     listenOptions.UseHttps( new Microsoft.AspNetCore.Server.Kestrel.Https.HttpsConnectionAdapterOptions()
+                     {
+                        ClientCertificateMode = Microsoft.AspNetCore.Server.Kestrel.Https.ClientCertificateMode.NoCertificate,
+                        ServerCertificate = new System.Security.Cryptography.X509Certificates.X509Certificate2( runningConfiguration.CertificateFile, runningConfiguration.CertificatePassword ),
+                        SslProtocols = System.Security.Authentication.SslProtocols.Tls12
+                     } );
+                  } );
+               }
             } )
             .Configure( app =>
             {
@@ -162,9 +189,9 @@ namespace Backend.HTTP.Server
 
       String CertificatePassword { get; }
 
-      Action<Microsoft.AspNetCore.Server.Kestrel.KestrelServerOptions> ServerOptionsProcessor { get; }
+      Action<Microsoft.AspNetCore.Server.Kestrel.Core.KestrelServerOptions> ServerOptionsProcessor { get; }
 
-      Action<Microsoft.AspNetCore.Server.Kestrel.KestrelServerLimits> ServerLimitsProcessor { get; }
+      Action<Microsoft.AspNetCore.Server.Kestrel.Core.KestrelServerLimits> ServerLimitsProcessor { get; }
 
       String[] URLs { get; }
 
@@ -179,8 +206,8 @@ namespace Backend.HTTP.Server
       public ServerConfigurationImpl(
          String certificateFile,
          String certificatePassword,
-         Action<Microsoft.AspNetCore.Server.Kestrel.KestrelServerOptions> serverOptionsProcessor,
-         Action<Microsoft.AspNetCore.Server.Kestrel.KestrelServerLimits> serverLimitsProcessor,
+         Action<Microsoft.AspNetCore.Server.Kestrel.Core.KestrelServerOptions> serverOptionsProcessor,
+         Action<Microsoft.AspNetCore.Server.Kestrel.Core.KestrelServerLimits> serverLimitsProcessor,
          String[] urls,
          AuthenticatorAggregator<HttpRequest, HttpContext> authChecker,
          ResponseCreatorFactory<HttpRequest, HttpRequest, HttpContext, ResponseCreatorInstantiationParameters>[] responseCreators
@@ -199,9 +226,9 @@ namespace Backend.HTTP.Server
 
       public String CertificatePassword { get; }
 
-      public Action<Microsoft.AspNetCore.Server.Kestrel.KestrelServerOptions> ServerOptionsProcessor { get; }
+      public Action<Microsoft.AspNetCore.Server.Kestrel.Core.KestrelServerOptions> ServerOptionsProcessor { get; }
 
-      public Action<Microsoft.AspNetCore.Server.Kestrel.KestrelServerLimits> ServerLimitsProcessor { get; }
+      public Action<Microsoft.AspNetCore.Server.Kestrel.Core.KestrelServerLimits> ServerLimitsProcessor { get; }
 
       public String[] URLs { get; }
 

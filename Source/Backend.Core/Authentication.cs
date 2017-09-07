@@ -50,6 +50,8 @@ namespace Backend.Core
    public interface Authenticator<in TContext, in TMatchContext> : Authenticator<TContext>
    {
       Boolean CanBeUsed( TMatchContext matchContext, Boolean isAuthenticationAttempt );
+
+      Boolean IsDefault { get; }
    }
 
    public struct ChallengeResult
@@ -91,7 +93,13 @@ namespace Backend.Core
       public Authenticator<TContext> GetAuthenticator( TMatchContext matchContext, String schema, Boolean isAuthenticationAttempt )
       {
          this._checkers.TryGetValue( schema ?? "", out var authenticators );
-         return authenticators?.FirstOrDefault( authenticator => authenticator.CanBeUsed( matchContext, isAuthenticationAttempt ) );
+         var retVal = authenticators?.FirstOrDefault( authenticator => authenticator.CanBeUsed( matchContext, isAuthenticationAttempt ) );
+         if ( retVal == null && authenticators != null )
+         {
+            retVal = authenticators.FirstOrDefault( authenticator => authenticator.IsDefault );
+         }
+
+         return retVal;
       }
 
       public IEnumerable<Authenticator<TContext>> GetAuthenticators( String schema )

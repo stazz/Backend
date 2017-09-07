@@ -1,7 +1,11 @@
 <Project Sdk="Microsoft.NET.Sdk">
   
+  <PropertyGroup>
+    <TargetFramework>netstandard1.0</TargetFramework>
+  </PropertyGroup>
+  
   <ItemGroup>
-    <PackageReference Include="UtilPack.NuGet.MSBuild" Version="1.0.0" />
+    <PackageReference Include="UtilPack.NuGet.MSBuild" Version="1.1.1" />
   </ItemGroup>
 
   <UsingTask
