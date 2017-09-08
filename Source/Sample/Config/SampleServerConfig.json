@@ -83,12 +83,12 @@
   }
   ],
   "Connection": {
-    "X509CertificatePath": "SampleCertificate.pfx",
-    "X509CertificatePassword": "public",
     "EndPoints": [
     {
       "Host": "localhost",
-      "Port": 5413
+      "Port": 5413,
+      "X509CertificatePath": "SampleCertificate.pfx",
+      "X509CertificatePassword": "public"
     }
     ]
   },

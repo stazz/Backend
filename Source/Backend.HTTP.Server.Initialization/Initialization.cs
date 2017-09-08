@@ -36,6 +36,7 @@ using NuGet.Frameworks;
 using Backend.HTTP.Common;
 using System.Collections.Concurrent;
 using System.Threading;
+using System.Net;
 
 namespace Backend.HTTP.Server.Initialization
 {
@@ -66,6 +67,7 @@ namespace Backend.HTTP.Server.Initialization
          LockFile runtimeFrameworkPackages = null
          )
       {
+
          if ( infraConfig == null )
          {
             infraConfig = configuration.GetSection( "Infrastructure" ).Get<InfrastructureConfiguration>();
@@ -95,7 +97,6 @@ namespace Backend.HTTP.Server.Initialization
             .GetSection( "Connection" )
             .Get<ConnectionConfiguration>();
          var endPoints = await ProcessEPConfigs( connConfig.EndPoints );
-         var urls = endPoints.ToArray().Select( ep => ep.Host + ":" + ep.Port ).ToArray();
 
          var defaultNuGetFileLocation = infraConfig?.DefaultComponentNuGetConfigurationFile;
 
@@ -192,10 +193,23 @@ namespace Backend.HTTP.Server.Initialization
             }
          }
 
+         // Can't use ToDictionary_Overwrite directly, since IDictionary does not extend IReadOnlyDictionary
+         var epDic = new Dictionary<IPEndPoint, ServerEndPointConfiguration>();
+         endPoints.ToDictionary_Overwrite(
+                  tuple => tuple.EndPoint,
+                  tuple => new ServerEndPointConfigurationImpl(
+                     DynamicElementManagerFactory.ProcessPathValue( configurationLocation, tuple.OriginatingConfiguration.X509CertificatePath ),
+                     tuple.OriginatingConfiguration.X509CertificatePassword,
+                     tuple.OriginatingConfiguration.CheckCertificateRevocation,
+                     null // TODO client certificate validation
+                     ),
+                  dictionaryFactory: eq => epDic
+                  );
+
          // Now we can create the server configuration
          var serverConfig = new ServerConfigurationImpl(
-               DynamicElementManagerFactory.ProcessPathValue( configurationLocation, connConfig.X509CertificatePath ),
-               connConfig.X509CertificatePassword,
+               //DynamicElementManagerFactory.ProcessPathValue( configurationLocation, connConfig.X509CertificatePath ),
+               //connConfig.X509CertificatePassword,
                ( options ) =>
                {
                   // This will also set the Limits, because Limits is inside the HTTP section
@@ -204,7 +218,7 @@ namespace Backend.HTTP.Server.Initialization
                      .Bind( options );
                },
                null,
-               urls,
+               epDic,
                serverAuthHandler,
                responseCreatorFactories.FilterNulls().ToArray()
             );
@@ -232,70 +246,63 @@ namespace Backend.HTTP.Server.Initialization
            {
               DebugWriter = null
            } ),
-           sourceCacheContext: sourceCacheContext
+           sourceCacheContext: sourceCacheContext,
+           leaveSourceCacheOpen: sourceCacheContext != null
            ) )
          {
             var fwPackageID = infraConfig?.NuGetFrameworkPackageID;
             var fwPackageVersion = infraConfig?.NuGetFrameworkPackageVersion;
             if ( String.IsNullOrEmpty( fwPackageID ) )
             {
-               fwPackageID = "Microsoft.NETCore.App";
-               fwPackageVersion = "1.1.2";
+               fwPackageID = UtilPackNuGetUtility.SDK_PACKAGE_NETCORE;
+               fwPackageVersion = "2.0.0";
             }
             return await restorer.RestoreIfNeeded( fwPackageID, fwPackageVersion );
          }
       }
 
-      private static async Task<IEnumerable<EndPointConfiguration>> ProcessEPConfigs( EndPointConfiguration[] endPoints )
-      {
-         System.Net.IPAddress[] thisAddresses = null;
-         if ( !endPoints.IsNullOrEmpty() && endPoints.Any( ep => !String.IsNullOrEmpty( ep.Host = ep.Host?.Trim() ) && ep.Host == "*" ) )
-         {
-            thisAddresses = await System.Net.Dns.GetHostAddressesAsync( System.Net.Dns.GetHostName() );
-         }
-
-         return ProcessEPConfigsSync( endPoints, thisAddresses );
-      }
-
-      private static IEnumerable<EndPointConfiguration> ProcessEPConfigsSync(
-         EndPointConfiguration[] endPoints,
-         System.Net.IPAddress[] thisHostIPAddresses
-         )
+      private static async Task<List<(IPEndPoint EndPoint, EndPointConfiguration OriginatingConfiguration)>> ProcessEPConfigs( EndPointConfiguration[] endPoints )
       {
          if ( endPoints.IsNullOrEmpty() )
          {
-            yield return new EndPointConfiguration();
+            throw new ArgumentException( "Please specify at least one endpoint" );
          }
-         else
+
+         var thisAddresses = new AsyncLazy<IPAddress[]>( async () => await Dns.GetHostAddressesAsync( Dns.GetHostName() ) );
+         var retVal = new List<(IPEndPoint EndPoint, EndPointConfiguration OriginatingConfiguration)>();
+         var cache = new Dictionary<String, Task<IPAddress[]>>();
+
+         IPEndPoint GetIPEndPoint( IPAddress address, Int32 portFromConfig )
          {
-            // We have to watch for '*' host.
-            // If it is encountered, then that means all the IP's of this host.
-            foreach ( var ep in endPoints )
+            return new IPEndPoint( address, portFromConfig < 0 || portFromConfig > UInt16.MaxValue ?
+               443 :
+               portFromConfig );
+         }
+
+         foreach ( var epConfig in endPoints )
+         {
+            var curConfig = epConfig;
+            String host;
+            if ( curConfig != null
+               && !String.IsNullOrEmpty( host = curConfig.Host?.Trim() )
+               )
             {
-               if ( ep != null
-                  && !String.IsNullOrEmpty( ep.Host = ep.Host?.Trim() )
-                  )
+               if ( host == "*" )
                {
-                  if ( ep.Host == "*" )
-                  {
-                     // We have to expand this one endpoint to multiple endpoints
-                     foreach ( var ipAddres in thisHostIPAddresses )
-                     {
-                        yield return new EndPointConfiguration()
-                        {
-                           Host = ipAddres.ToString(),
-                           Port = ep.Port
-                        };
-                     }
-                  }
-                  else
-                  {
-                     yield return ep;
-                  }
+                  // Asterisk means listen to all addresses of this machine
+                  retVal.AddRange( ( await thisAddresses ).Select( addr => (GetIPEndPoint( addr, curConfig.Port ), curConfig) ) );
+               }
+               else
+               {
+                  retVal.AddRange( ( await cache.GetOrAdd_NotThreadSafe( host, h => Dns.GetHostAddressesAsync( h ) ) ).Select( addr => (GetIPEndPoint( addr, curConfig.Port ), curConfig) ) );
                }
             }
          }
+
+
+         return retVal;
       }
+
 
    }
 
@@ -548,14 +555,15 @@ namespace Backend.HTTP.Server.Initialization
 
    public class ConnectionConfiguration
    {
-      public String X509CertificatePath { get; set; }
-      public String X509CertificatePassword { get; set; }
-
       public EndPointConfiguration[] EndPoints { get; set; }
    }
 
    public class EndPointConfiguration
    {
+      public String X509CertificatePath { get; set; }
+      public String X509CertificatePassword { get; set; }
+      public Boolean CheckCertificateRevocation { get; set; }
+
       public String Host { get; set; } = "localhost";
 
       public Int32 Port { get; set; } = 443;

@@ -24,6 +24,8 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
+using System.Net.Security;
+using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 using System.Threading.Tasks;
 using UtilPack;
@@ -120,25 +122,6 @@ namespace Backend.HTTP.Server
             creators
             );
 
-         async Task<IPEndPoint[]> URLToEndPoints( String url )
-         {
-            IPEndPoint[] eps;
-            if ( Uri.TryCreate( "dummy://" + url, UriKind.Absolute, out var uri ) )
-            {
-               eps = ( IPAddress.TryParse( uri.Host, out var addr ) ? new[] { addr } : await Dns.GetHostAddressesAsync( uri.Host ) )
-                  .Select( address => new IPEndPoint( address, uri.Port < 0 ? 443 : uri.Port ) )
-                  .ToArray();
-            }
-            else
-            {
-               eps = Empty<IPEndPoint>.Array;
-            }
-            return eps;
-         }
-
-         var endpoints = ( await Task.WhenAll( runningConfiguration.URLs.Select( url => URLToEndPoints( url ) ) ) )
-            .SelectMany( ep => ep ).ToArray();
-
          hostBuilder
             .ConfigureLogging( ctx => new ConsoleErrorLoggerProvider() )
             .UseKestrel( options =>
@@ -153,19 +136,30 @@ namespace Backend.HTTP.Server
                options.AddServerHeader = false;
                options.AllowSynchronousIO = false;
 
-
-               // Configure https
-               foreach ( var ep in endpoints )
+               // Configure endpoints
+               foreach ( var kvp in runningConfiguration.EndPoints )
                {
-                  options.Listen( ep, listenOptions =>
+                  var ep = kvp.Key;
+                  var epConfig = kvp.Value;
+                  var certFile = epConfig.CertificateFile;
+                  if ( String.IsNullOrEmpty( certFile ) )
                   {
-                     listenOptions.UseHttps( new Microsoft.AspNetCore.Server.Kestrel.Https.HttpsConnectionAdapterOptions()
+                     options.Listen( ep );
+                  }
+                  else
+                  {
+                     options.Listen( ep, listenOptions =>
                      {
-                        ClientCertificateMode = Microsoft.AspNetCore.Server.Kestrel.Https.ClientCertificateMode.NoCertificate,
-                        ServerCertificate = new System.Security.Cryptography.X509Certificates.X509Certificate2( runningConfiguration.CertificateFile, runningConfiguration.CertificatePassword ),
-                        SslProtocols = System.Security.Authentication.SslProtocols.Tls12
+                        listenOptions.UseHttps( new Microsoft.AspNetCore.Server.Kestrel.Https.HttpsConnectionAdapterOptions()
+                        {
+                           CheckCertificateRevocation = epConfig.CheckCertificateRevocation,
+                           ClientCertificateValidation = epConfig.ClientCertificateValidation,
+                           ClientCertificateMode = Microsoft.AspNetCore.Server.Kestrel.Https.ClientCertificateMode.NoCertificate,
+                           ServerCertificate = new X509Certificate2( certFile, epConfig.CertificatePassword ),
+                           SslProtocols = System.Security.Authentication.SslProtocols.Tls12
+                        } );
                      } );
-                  } );
+                  }
                }
             } )
             .Configure( app =>
@@ -176,7 +170,6 @@ namespace Backend.HTTP.Server
                   return server.ProcessRequest;
                } );
             } )
-            .UseUrls( runningConfiguration.URLs.Select( url => "https://" + url ).ToArray() )
             ;
          return hostBuilder.Build();
 
@@ -185,56 +178,81 @@ namespace Backend.HTTP.Server
 
    public interface ServerConfiguration
    {
-      String CertificateFile { get; }
-
-      String CertificatePassword { get; }
 
       Action<Microsoft.AspNetCore.Server.Kestrel.Core.KestrelServerOptions> ServerOptionsProcessor { get; }
 
       Action<Microsoft.AspNetCore.Server.Kestrel.Core.KestrelServerLimits> ServerLimitsProcessor { get; }
 
-      String[] URLs { get; }
+      IReadOnlyDictionary<IPEndPoint, ServerEndPointConfiguration> EndPoints { get; }
 
       AuthenticatorAggregator<HttpRequest, HttpContext> AuthChecker { get; }
 
       ResponseCreatorFactory<HttpRequest, HttpRequest, HttpContext, ResponseCreatorInstantiationParameters>[] ResponseCreatorFactories { get; }
    }
 
+   public interface ServerEndPointConfiguration
+   {
+      String CertificateFile { get; }
+
+      String CertificatePassword { get; }
+
+      Boolean CheckCertificateRevocation { get; }
+
+      Func<X509Certificate2, X509Chain, SslPolicyErrors, Boolean> ClientCertificateValidation { get; }
+   }
+
    public class ServerConfigurationImpl : ServerConfiguration
    {
 
       public ServerConfigurationImpl(
-         String certificateFile,
-         String certificatePassword,
          Action<Microsoft.AspNetCore.Server.Kestrel.Core.KestrelServerOptions> serverOptionsProcessor,
          Action<Microsoft.AspNetCore.Server.Kestrel.Core.KestrelServerLimits> serverLimitsProcessor,
-         String[] urls,
+         IReadOnlyDictionary<IPEndPoint, ServerEndPointConfiguration> endPoints,
          AuthenticatorAggregator<HttpRequest, HttpContext> authChecker,
          ResponseCreatorFactory<HttpRequest, HttpRequest, HttpContext, ResponseCreatorInstantiationParameters>[] responseCreators
          )
       {
-         this.CertificateFile = certificateFile;
-         this.CertificatePassword = certificatePassword;
          this.ServerOptionsProcessor = serverOptionsProcessor;
          this.ServerLimitsProcessor = serverLimitsProcessor;
-         this.URLs = urls;
+         this.EndPoints = ArgumentValidator.ValidateNotNull( nameof( endPoints ), endPoints );
          this.AuthChecker = authChecker;
          this.ResponseCreatorFactories = responseCreators;
+      }
+
+
+      public Action<Microsoft.AspNetCore.Server.Kestrel.Core.KestrelServerOptions> ServerOptionsProcessor { get; }
+
+      public Action<Microsoft.AspNetCore.Server.Kestrel.Core.KestrelServerLimits> ServerLimitsProcessor { get; }
+
+      public IReadOnlyDictionary<IPEndPoint, ServerEndPointConfiguration> EndPoints { get; }
+
+      public AuthenticatorAggregator<HttpRequest, HttpContext> AuthChecker { get; }
+
+      public ResponseCreatorFactory<HttpRequest, HttpRequest, HttpContext, ResponseCreatorInstantiationParameters>[] ResponseCreatorFactories { get; }
+   }
+
+   public class ServerEndPointConfigurationImpl : ServerEndPointConfiguration
+   {
+      public ServerEndPointConfigurationImpl(
+         String certificateFile,
+         String certificatePassword,
+         Boolean checkCertificateRevocation,
+         Func<X509Certificate2, X509Chain, SslPolicyErrors, Boolean> clientCertificateValidation
+         )
+      {
+         this.CertificateFile = certificateFile;
+         this.CertificatePassword = certificatePassword;
+         this.CheckCertificateRevocation = checkCertificateRevocation;
+         this.ClientCertificateValidation = clientCertificateValidation;
       }
 
       public String CertificateFile { get; }
 
       public String CertificatePassword { get; }
 
-      public Action<Microsoft.AspNetCore.Server.Kestrel.Core.KestrelServerOptions> ServerOptionsProcessor { get; }
+      public Boolean CheckCertificateRevocation { get; }
 
-      public Action<Microsoft.AspNetCore.Server.Kestrel.Core.KestrelServerLimits> ServerLimitsProcessor { get; }
-
-      public String[] URLs { get; }
-
-      public AuthenticatorAggregator<HttpRequest, HttpContext> AuthChecker { get; }
-
-      public ResponseCreatorFactory<HttpRequest, HttpRequest, HttpContext, ResponseCreatorInstantiationParameters>[] ResponseCreatorFactories { get; }
+      public Func<X509Certificate2, X509Chain, SslPolicyErrors, Boolean> ClientCertificateValidation { get; }
    }
 
    internal sealed class ConsoleErrorLoggerProvider : Microsoft.Extensions.Logging.ILoggerProvider, Microsoft.Extensions.Logging.ILoggerFactory
