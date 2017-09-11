@@ -29,7 +29,7 @@
       
     <UtilPack.NuGet.Deployment.MSBuild.DeployNuGetPackageTask
       ProcessPackageID="UtilPack.NuGet.ProcessRunner"
-      ProcessPackageVersion="1.1.1"
+      ProcessPackageVersion="1.2.0"
       ProcessFramework="netcoreapp1.1"
       TargetDirectory="$(DeploymentDirectory)"
     />
