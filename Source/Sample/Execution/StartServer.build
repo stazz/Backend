@@ -4,7 +4,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="UtilPack.NuGet.MSBuild" Version="1.1.1"/>
+    <PackageReference Include="UtilPack.NuGet.MSBuild" Version="2.2.1"/>
   </ItemGroup>
   
   <UsingTask
@@ -29,7 +29,7 @@
     </PropertyGroup>
     <!-- Use GenerateConfigFiles instead of CopyNonSDKAssemblies, since CopyNonSDKAssemblies causes "double-dependency" for "System.Security.Principal.Windows" assembly, resulting in copy fail (since same-named assemblies are not yet properly handled by UtilPack.NuGet.Deployment) -->
     <UtilPack.MSBuild.AsyncExec.AsyncExecTask
-      Command="start dotnet &quot;$(DeploymentDirectory)\UtilPack.NuGet.ProcessRunner.dll&quot; /ProcessPackageID=Backend.HTTP.Server.Runner /ProcessPackageVersion=0.1.0-beta /DeploymentKind=CopyNonSDKAssemblies /ShutdownSemaphoreProcessArgument=ShutdownSemaphoreName /RestartSemaphoreProcessArgument=RestartSemaphoreName /PauseBeforeExitIfErrorsSeen=true &quot;/ProcessArgument:ConfigurationFile=$(ServerConfigurationPath)&quot; /ProcessArgument:WatchComponentAssemblies=true /ProcessArgument:WatchServerConfigFile=true"
+      Command="start dotnet &quot;$(DeploymentDirectory)\UtilPack.NuGet.ProcessRunner.dll&quot; /ProcessPackageID=Backend.HTTP.Server.Runner /ProcessPackageVersion=0.2.0-beta /DeploymentKind=CopyNonSDKAssemblies /ShutdownSemaphoreProcessArgument=ShutdownSemaphoreName /RestartSemaphoreProcessArgument=RestartSemaphoreName /PauseBeforeExitIfErrorsSeen=true &quot;/ProcessArgument:ConfigurationFile=$(ServerConfigurationPath)&quot; /ProcessArgument:WatchComponentAssemblies=true /ProcessArgument:WatchServerConfigFile=true"
     />
   </Target>
 </Project>

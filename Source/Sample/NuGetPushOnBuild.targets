@@ -5,6 +5,11 @@
     <NuGetPushSourcesFile Condition=" '$(NuGetPushSourcesFile)' == '' ">$(MSBuildThisFileDirectory)\NuGetPushOnBuild.props</NuGetPushSourcesFile>
   </PropertyGroup>
   
+  <PropertyGroup Condition=" '$(MSBuildExecCMD)' == '' ">
+    <MSBuildExecCMD Condition=" '$(MSBuildRuntimeType)' == 'Core' ">dotnet msbuild</MSBuildExecCMD>
+    <MSBuildExecCMD Condition=" '$(MSBuildRuntimeType)' != 'Core' ">"$(MSBuildBinPath)\MSBuild.exe"</MSBuildExecCMD>
+  </PropertyGroup>
+  
   <Import Project="$(NuGetPushSourcesFile)" Condition="Exists('$(NuGetPushSourcesFile)')" />
   
   <!-- 
@@ -25,7 +30,7 @@
     <!-- Perform restore via Exec as otherwise the required properties are not updated -->
     <Exec
       Condition="!Exists('$(PushOnBuildDirectory)\obj')"
-      Command="&quot;$(MSBuildBinPath)\MSBuild.exe&quot; /t:Restore &quot;$(PushOnBuildFile)&quot;"
+      Command="$(MSBuildExecCMD) /t:Restore &quot;$(PushOnBuildFile)&quot;"
       />
       
     <!-- Perform push by calling specific target -->

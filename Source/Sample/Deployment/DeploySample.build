@@ -4,7 +4,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="UtilPack.NuGet.MSBuild" Version="1.1.1"/>
+    <PackageReference Include="UtilPack.NuGet.MSBuild" Version="2.2.1"/>
   </ItemGroup>
   
   <UsingTask
@@ -16,7 +16,7 @@
     <Task>
       <NuGetTaskInfo>
         <PackageID>UtilPack.NuGet.Deployment.MSBuild</PackageID>
-        <PackageVersion>1.0.0</PackageVersion>
+        <PackageVersion>2.0.0</PackageVersion>
       </NuGetTaskInfo>
     </Task>
   </UsingTask>
@@ -29,8 +29,8 @@
       
     <UtilPack.NuGet.Deployment.MSBuild.DeployNuGetPackageTask
       ProcessPackageID="UtilPack.NuGet.ProcessRunner"
-      ProcessPackageVersion="1.2.0"
-      ProcessFramework="netcoreapp1.1"
+      ProcessPackageVersion="2.0.0"
+      ProcessFramework="netcoreapp2.0"
       TargetDirectory="$(DeploymentDirectory)"
     />
   </Target>

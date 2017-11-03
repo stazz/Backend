@@ -10,7 +10,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Backend.HTTP.Common.Login" Version="0.1.0-beta" />
+    <PackageReference Include="Backend.HTTP.Common.Login" Version="0.2.0-beta" />
     <PackageReference Include="UtilPack.Configuration" Version="1.0.1" />
   </ItemGroup>
 

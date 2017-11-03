@@ -5,7 +5,7 @@
   </PropertyGroup>
   
   <ItemGroup>
-    <PackageReference Include="UtilPack.NuGet.MSBuild" Version="1.1.1" />
+    <PackageReference Include="UtilPack.NuGet.MSBuild" Version="2.2.1" />
   </ItemGroup>
 
   <UsingTask
@@ -17,7 +17,7 @@
     <Task>
       <NuGetTaskInfo>
         <PackageID>UtilPack.NuGet.Push.MSBuild</PackageID>
-        <PackageVersion>1.0.0</PackageVersion>
+        <PackageVersion>2.0.0</PackageVersion>
       </NuGetTaskInfo>
     </Task>
   </UsingTask>

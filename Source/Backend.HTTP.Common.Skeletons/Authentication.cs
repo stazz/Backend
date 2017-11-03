@@ -46,7 +46,7 @@ namespace Backend.HTTP.Common
          this._authIDByteCount = Math.Max( 1, configuration.AuthenticationTokenByteCount );
          this._expirationTime = configuration.AuthenticationTokenExpirationTime;
          var chars = StringConversions.CreateBase64EncodeLookupTable( true );
-         using ( var rng = new DigestBasedRandomGenerator( new SHA512() ) )
+         using ( var rng = new DigestBasedRandomGenerator( new SHA512(), 10, false ) )
          {
             rng.AddSeedMaterial( configuration.AuthenticationTokenBase64ShuffleSeed );
             using ( var secRandom = new SecureRandom( rng ) )
