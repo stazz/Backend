@@ -11,7 +11,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="UtilPack.Cryptography.Digest" Version="1.1.0" />
+    <PackageReference Include="UtilPack.Cryptography.Digest" Version="2.0.0" />
     <PackageReference Include="UtilPack.Configuration" Version="1.0.1" />
   </ItemGroup>
 

@@ -25,6 +25,7 @@ using System.Collections.Concurrent;
 using UtilPack;
 using UtilPack.Cryptography.Digest;
 using UtilPack.Cryptography;
+using System.Threading;
 
 namespace Backend.HTTP.Common
 {
@@ -32,19 +33,17 @@ namespace Backend.HTTP.Common
    {
       private readonly Int32 _authIDByteCount;
       private readonly Char[] _base64Encode;
-      private readonly TimeSpan _expirationTime;
-      private readonly AuthenticationDataHolder _authData;
 
       public HTTPAuthenticator(
          HTTPAuthenticatorConfiguration configuration,
          AuthenticationDataHolder authDataHolder
          )
       {
-         this._authData = ArgumentValidator.ValidateNotNull( nameof( authDataHolder ), authDataHolder );
+         this.AuthData = ArgumentValidator.ValidateNotNull( nameof( authDataHolder ), authDataHolder );
          this.IsDefault = configuration.IsDefault;
 
          this._authIDByteCount = Math.Max( 1, configuration.AuthenticationTokenByteCount );
-         this._expirationTime = configuration.AuthenticationTokenExpirationTime;
+         this.ExpirationTime = configuration.AuthenticationTokenExpirationTime;
          var chars = StringConversions.CreateBase64EncodeLookupTable( true );
          using ( var rng = new DigestBasedRandomGenerator( new SHA512(), 10, false ) )
          {
@@ -62,19 +61,23 @@ namespace Backend.HTTP.Common
 
       public Boolean IsDefault { get; }
 
+      protected AuthenticationDataHolder AuthData { get; }
+
+      protected TimeSpan ExpirationTime { get; }
+
       public ValueTask<ChallengeResult> ChallengeAsync(
          HttpContext context
          )
       {
          var authID = this.GetAuthID( context.Request );
          UserInfo userInfo;
-         if ( this._authData.TryGetAuthData( authID, out var authIDInfo, out var authUserInfo ) )
+         if ( this.AuthData.TryGetAuthData( authID, out var authIDInfo, out var authUserInfo ) )
          {
             userInfo = authUserInfo.UserInfo;
          }
          else
          {
-            this._authData.RemoveAuthData( authID );
+            this.AuthData.RemoveAuthData( authID );
             userInfo = null;
          }
 
@@ -87,7 +90,7 @@ namespace Backend.HTTP.Common
       public async Task RegisterUser( HttpContext context, String userID )
       {
          var authID = this.GenerateAuthID( userID );
-         this._authData.AddAuthData( authID, userID, this._expirationTime );
+         this.AuthData.AddAuthData( authID, userID, this.ExpirationTime );
          await this.MarkChallengeAccepted( context.Response, authID )();
       }
 
@@ -96,7 +99,7 @@ namespace Backend.HTTP.Common
          var authID = this.GetAuthID( context.Request );
          if ( !authID.IsNullOrEmpty() )
          {
-            this._authData.RemoveAuthData( authID );
+            this.AuthData.RemoveAuthData( authID );
          }
       }
 
@@ -140,7 +143,5 @@ namespace Backend.HTTP.Common
       public TimeSpan AuthenticationTokenExpirationTime { get; set; } = TimeSpan.FromHours( 3 ); // 3 hours
       public Boolean IsDefault { get; set; }
    }
-
-
 
 }

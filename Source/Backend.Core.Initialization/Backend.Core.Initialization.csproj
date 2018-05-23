@@ -8,11 +8,12 @@
     <CheckForOverflowUnderflow>True</CheckForOverflowUnderflow>
     <TreatWarningsAsErrors>True</TreatWarningsAsErrors>
     <TreatSpecificWarningsAsErrors />
+    <LangVersion>latest</LangVersion>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="UtilPack.Configuration" Version="1.0.1" />
-    <PackageReference Include="UtilPack.NuGet.AssemblyLoading" Version="2.0.0" />
+    <PackageReference Include="UtilPack.NuGet.AssemblyLoading" Version="2.1.0" />
   </ItemGroup>
 
   <!-- Assembly information stuff -->
@@ -48,7 +49,7 @@
     <PackageVersion>$(VersionPrefix)</PackageVersion>
     <PackageVersion Condition=" '$(VersionSuffix)' != ''">$(PackageVersion)-$(VersionSuffix)</PackageVersion>
     <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
-    <PackageReleaseNotes>Updated to ASP.NET Core 2.0.</PackageReleaseNotes>
+    <PackageReleaseNotes>Updated dependencies mostly.</PackageReleaseNotes>
     <PackageTags>backend server core initialization dynamic assembly load</PackageTags>
     <Title>Backend Common Initialization</Title>
     <RepositoryUrl>https://github.com/CometaSolutions/Backend</RepositoryUrl>

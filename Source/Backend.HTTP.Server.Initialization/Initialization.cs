@@ -37,6 +37,10 @@ using Backend.HTTP.Common;
 using System.Collections.Concurrent;
 using System.Threading;
 using System.Net;
+using NuGet.Protocol;
+
+using TLoggerFactory = UtilPack.Logging.Consume.LogConsumerFactory<Backend.HTTP.Common.HttpLogInfo>;
+
 
 namespace Backend.HTTP.Server.Initialization
 {
@@ -49,6 +53,8 @@ namespace Backend.HTTP.Server.Initialization
          var simpleName = assemblyName.Name;
          switch ( simpleName )
          {
+            // These are the two interop assemblies where we must return assembly instance loaded by parent (this) context, since we pass types and instances in these assemblies directly to response handlers
+            case "UtilPack.Logging":
             case "Backend.HTTP.Common":
                return true;
             default:
@@ -86,6 +92,7 @@ namespace Backend.HTTP.Server.Initialization
          {
             sourceCacheContext = new SourceCacheContext();
          }
+         var localNuSpecCache = new LocalPackageFileCache();
 
          if ( runtimeFrameworkPackages == null )
          {
@@ -99,7 +106,28 @@ namespace Backend.HTTP.Server.Initialization
          var endPoints = await ProcessEPConfigs( connConfig.EndPoints );
 
          var defaultNuGetFileLocation = infraConfig?.DefaultComponentNuGetConfigurationFile;
+         var rid = UtilPackNuGetUtility.TryAutoDetectThisProcessRuntimeIdentifier();
 
+         // Loggers
+         var loggerManagers = configuration
+            .GetSection( "Logging" )
+            .GetChildren()
+            .Select( loggerConfig =>
+             {
+                return DynamicElementManagerFactory.CreateFromConfig(
+                   configurationLocation,
+                   thisFramework,
+                   defaultNuGetFileLocation,
+                   sourceCacheContext,
+                   localNuSpecCache,
+                   runtimeFrameworkPackages,
+                   rid,
+                   loggerConfig,
+                   resolver => resolver.InstantiateFromConfiguration<TLoggerFactory>( loggerConfig ),
+                   LoadUsingParentContext
+                   );
+             } )
+            .ToArray();
          // Authenticator managers
          var authManagerInfos = configuration
                .GetSection( "Authentication" )
@@ -112,7 +140,9 @@ namespace Backend.HTTP.Server.Initialization
                        thisFramework,
                        defaultNuGetFileLocation,
                        sourceCacheContext,
+                       localNuSpecCache,
                        runtimeFrameworkPackages,
+                       rid,
                        singleAuthConfig,
                        resolver => resolver.InstantiateFromConfiguration<AuthenticatorFactory<HttpContext, HttpRequest, AuthenticationDataHolder>>( singleAuthConfig ),
                        LoadUsingParentContext
@@ -163,7 +193,9 @@ namespace Backend.HTTP.Server.Initialization
                thisFramework,
                defaultNuGetFileLocation,
                sourceCacheContext,
+               localNuSpecCache,
                runtimeFrameworkPackages,
+               rid,
                responseCreatorConfig,
                resolver => resolver.InstantiateFromConfiguration<ResponseCreatorFactory<HttpRequest, HttpRequest, HttpContext, ResponseCreatorInstantiationParameters>>( responseCreatorConfig ),
                LoadUsingParentContext
@@ -208,8 +240,6 @@ namespace Backend.HTTP.Server.Initialization
 
          // Now we can create the server configuration
          var serverConfig = new ServerConfigurationImpl(
-               //DynamicElementManagerFactory.ProcessPathValue( configurationLocation, connConfig.X509CertificatePath ),
-               //connConfig.X509CertificatePassword,
                ( options ) =>
                {
                   // This will also set the Limits, because Limits is inside the HTTP section
@@ -220,7 +250,8 @@ namespace Backend.HTTP.Server.Initialization
                null,
                epDic,
                serverAuthHandler,
-               responseCreatorFactories.FilterNulls().ToArray()
+               responseCreatorFactories.FilterNulls().ToArray(),
+               ( await Task.WhenAll( loggerManagers.Select( async m => await m.Instance ) ) ).ToList()
             );
 
          return (
@@ -401,7 +432,7 @@ namespace Backend.HTTP.Server.Initialization
             lock ( this._lock )
             {
                var authIDsToRemove = this._authenticationTokens
-                  .Where( kvp => DateTime.UtcNow - kvp.Value.LastAccessed > kvp.Value.ExpirationSpan )
+                  .Where( kvp => !this.CheckAuthTokenIsStillValid( kvp.Value ) )
                   .ToArray();
                foreach ( var kvp in authIDsToRemove )
                {
@@ -433,7 +464,8 @@ namespace Backend.HTTP.Server.Initialization
 
       private Boolean CheckAuthTokenIsStillValid( AuthenticatedTokenInfo tokenInfo )
       {
-         return DateTime.UtcNow - tokenInfo.LastAccessed <= tokenInfo.ExpirationSpan;
+         return tokenInfo.ExpirationSpan == Timeout.InfiniteTimeSpan
+            || DateTime.UtcNow - tokenInfo.LastAccessed <= tokenInfo.ExpirationSpan;
       }
 
       protected override void Dispose( Boolean disposing )

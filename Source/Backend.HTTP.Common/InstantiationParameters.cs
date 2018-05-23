@@ -21,17 +21,21 @@ using Microsoft.AspNetCore.Hosting;
 using System;
 using System.IO;
 
+using TLogger = UtilPack.Logging.Publish.LogPublisher<Backend.HTTP.Common.HttpLogInfo>;
+
 namespace Backend.HTTP.Common
 {
    public class ResponseCreatorInstantiationParameters
    {
       public ResponseCreatorInstantiationParameters(
          String configurationFileLocation,
-         IWebHostBuilder webHostBuilder
+         IWebHostBuilder webHostBuilder,
+         TLogger logger
          )
       {
          this.ConfigurationFileLocation = configurationFileLocation;
          this.WebHostBuilder = webHostBuilder ?? throw new ArgumentNullException( nameof( webHostBuilder ) );
+         this.Logger = logger ?? throw new ArgumentNullException( nameof( logger ) );
       }
 
       public String ConfigurationFileLocation { get; }
@@ -41,6 +45,8 @@ namespace Backend.HTTP.Common
       public event Action<IApplicationBuilder> OnConfigureEvent;
 
       public Action<IApplicationBuilder> OnConfigureEventValue => this.OnConfigureEvent;
+
+      public TLogger Logger { get; }
    }
 }
 
@@ -48,12 +54,9 @@ public static partial class E_Backend
 {
    public static String ProcessPathValue( this ResponseCreatorInstantiationParameters paramz, String path )
    {
-      if ( !String.IsNullOrEmpty( path ) )
+      if ( !String.IsNullOrEmpty( path ) && !Path.IsPathRooted( path ) )
       {
-         if ( !Path.IsPathRooted( path ) )
-         {
-            path = Path.GetFullPath( Path.Combine( Path.GetDirectoryName( paramz.ConfigurationFileLocation ), path ) );
-         }
+         path = Path.GetFullPath( Path.Combine( Path.GetDirectoryName( paramz.ConfigurationFileLocation ), path ) );
       }
 
       return path;

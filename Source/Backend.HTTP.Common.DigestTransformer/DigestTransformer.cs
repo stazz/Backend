@@ -43,17 +43,8 @@ namespace Backend.HTTP.Common.DigestTransformer
             configuration = new DigestTransformerConfiguration();
          }
 
-         var chars = StringConversions.CreateBase64EncodeLookupTable( true );
-         using ( var rng = new DigestBasedRandomGenerator( new SHA512(), 10, false ) )
-         {
-            rng.AddSeedMaterial( configuration.Base64EncodeShuffleSeed );
-            using ( var secRandom = new SecureRandom( rng ) )
-            {
-               chars.Shuffle( secRandom );
-            }
-         }
-         this._base64EncodeChars = chars;
-         this._algorithm = new SHA256();
+         this._base64EncodeChars = DigestBasedRandomGenerator.ShuffleBase64CharactersFromSeed( configuration.Base64EncodeShuffleSeed, isURLSafe: true );
+         this._algorithm = new SHA512();
       }
 
       public String Transform( String input )

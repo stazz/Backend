@@ -29,6 +29,9 @@ using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 using System.Threading.Tasks;
 using UtilPack;
+using UtilPack.Logging;
+using TLogger = UtilPack.Logging.Publish.LogPublisher<Backend.HTTP.Common.HttpLogInfo>;
+using TLoggerFactory = UtilPack.Logging.Consume.LogConsumerFactory<Backend.HTTP.Common.HttpLogInfo>;
 
 namespace Backend.HTTP.Server
 {
@@ -38,13 +41,16 @@ namespace Backend.HTTP.Server
 
       private readonly AuthenticatorAggregator<HttpRequest, HttpContext> _authChecker;
       private readonly (ResponseCreatorMatcher<HttpRequest>, ResponseCreator<HttpRequest, HttpContext>)[] _responseCreators;
+      private readonly TLogger _logger;
 
       public Server(
+         TLogger logger,
          AuthenticatorAggregator<HttpRequest, HttpContext> authChecker,
          (ResponseCreatorMatcher<HttpRequest>, ResponseCreator<HttpRequest, HttpContext>)[] responseCreators,
          String guestUserID = null
          )
       {
+         this._logger = logger;
          this._responseCreators = responseCreators ?? Array.Empty<(ResponseCreatorMatcher<HttpRequest>, ResponseCreator<HttpRequest, HttpContext>)>();
          this._authChecker = authChecker ?? new HTTPAuthenticatorAggregator( null );
       }
@@ -52,12 +58,13 @@ namespace Backend.HTTP.Server
       public async Task ProcessRequest( HttpContext context )
       {
          // TODO make it possible to create one big regex which would identify the creator right away.
+         var request = context.Request;
          try
          {
             var creator = this._responseCreators
                .Select( curCreator =>
                {
-                  var info = curCreator.Item1.IsMatch( context.Request, out var wasMatch );
+                  var info = curCreator.Item1.IsMatch( request, out var wasMatch );
                   return (curCreator.Item2, wasMatch, info);
                } ).FirstOrDefault( curCreator => curCreator.Item2 );
 
@@ -73,13 +80,15 @@ namespace Backend.HTTP.Server
                {
                   await task;
                }
+
+               this._logger.Publish( HttpLogInfo.Trace, "Processed request {0} with method {1} and response code {2}.", request.Path, request.Method, context.Response.StatusCode );
             }
          }
          catch ( Exception exc )
          {
             if ( !context.RequestAborted.IsCancellationRequested )
             {
-               Console.Error.WriteLine( "Exception when processing request.\n{0}", exc );
+               await this._logger.PublishAsync( HttpLogInfo.Error, "Error when processing request for {0}: {1}", request.Path, exc.Message );
                try
                {
                   context.Response.StatusCode = 500;
@@ -105,10 +114,14 @@ namespace Backend.HTTP.Server
          }
 
          var hostBuilder = new WebHostBuilder();
+         var loggerContext = new UtilPack.Logging.Bootstrap.LogRegistration<HttpLogInfo>();
+         loggerContext.RegisterLoggers( runningConfiguration.Loggers );
+         var logger = loggerContext.CreateHandlerFromCurrentRegistrations();
 
          var creationParams = new ResponseCreatorInstantiationParameters(
             configurationLocation,
-            hostBuilder
+            hostBuilder,
+            logger
             );
 
          var creators = await Task.WhenAll(
@@ -118,6 +131,7 @@ namespace Backend.HTTP.Server
             );
 
          var server = new Server(
+            logger,
             runningConfiguration.AuthChecker,
             creators
             );
@@ -188,6 +202,8 @@ namespace Backend.HTTP.Server
       AuthenticatorAggregator<HttpRequest, HttpContext> AuthChecker { get; }
 
       ResponseCreatorFactory<HttpRequest, HttpRequest, HttpContext, ResponseCreatorInstantiationParameters>[] ResponseCreatorFactories { get; }
+
+      IReadOnlyList<TLoggerFactory> Loggers { get; }
    }
 
    public interface ServerEndPointConfiguration
@@ -209,7 +225,8 @@ namespace Backend.HTTP.Server
          Action<Microsoft.AspNetCore.Server.Kestrel.Core.KestrelServerLimits> serverLimitsProcessor,
          IReadOnlyDictionary<IPEndPoint, ServerEndPointConfiguration> endPoints,
          AuthenticatorAggregator<HttpRequest, HttpContext> authChecker,
-         ResponseCreatorFactory<HttpRequest, HttpRequest, HttpContext, ResponseCreatorInstantiationParameters>[] responseCreators
+         ResponseCreatorFactory<HttpRequest, HttpRequest, HttpContext, ResponseCreatorInstantiationParameters>[] responseCreators,
+         IReadOnlyList<TLoggerFactory> logger
          )
       {
          this.ServerOptionsProcessor = serverOptionsProcessor;
@@ -217,6 +234,7 @@ namespace Backend.HTTP.Server
          this.EndPoints = ArgumentValidator.ValidateNotNull( nameof( endPoints ), endPoints );
          this.AuthChecker = authChecker;
          this.ResponseCreatorFactories = responseCreators;
+         this.Loggers = ArgumentValidator.ValidateNotNull( nameof( logger ), logger );
       }
 
 
@@ -229,6 +247,8 @@ namespace Backend.HTTP.Server
       public AuthenticatorAggregator<HttpRequest, HttpContext> AuthChecker { get; }
 
       public ResponseCreatorFactory<HttpRequest, HttpRequest, HttpContext, ResponseCreatorInstantiationParameters>[] ResponseCreatorFactories { get; }
+
+      public IReadOnlyList<TLoggerFactory> Loggers { get; }
    }
 
    public class ServerEndPointConfigurationImpl : ServerEndPointConfiguration
@@ -307,4 +327,7 @@ namespace Backend.HTTP.Server
          // Don't do anything.
       }
    }
+
+
+
 }

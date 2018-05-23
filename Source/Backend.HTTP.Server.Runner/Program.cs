@@ -108,7 +108,7 @@ namespace Backend.HTTP.Server.Runner
             .AddCommandLine( args )
             .Build();
 
-         var serverConfigFile = System.IO.Path.GetFullPath( config.GetValue<String>( CONFIGURATION_SERVER_CONFIG_FILE_PATH, "ServerConfig.json" ) );
+         var serverConfigFile = System.IO.Path.GetFullPath( config.GetValue( CONFIGURATION_SERVER_CONFIG_FILE_PATH, "ServerConfig.json" ) );
          IConfigurationRoot serverConfig = null;
          try
          {
@@ -129,8 +129,8 @@ namespace Backend.HTTP.Server.Runner
          }
          else
          {
-            var trackAssemblies = config.GetValue<Boolean>( CONFIGURATION_WATCH_ASSEMBLIES, false );
-            var trackConfigFile = config.GetValue<Boolean>( CONFIGURATION_WATCH_SERVER_CONFIG_FILE, false );
+            var trackAssemblies = config.GetValue( CONFIGURATION_WATCH_ASSEMBLIES, false );
+            var trackConfigFile = config.GetValue( CONFIGURATION_WATCH_SERVER_CONFIG_FILE, false );
             var assembliesBag = trackAssemblies || trackConfigFile ? new ConcurrentBag<String>() : null;
             if ( trackConfigFile )
             {

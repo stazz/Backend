@@ -48,7 +48,7 @@
     <PackageVersion>$(VersionPrefix)</PackageVersion>
     <PackageVersion Condition=" '$(VersionSuffix)' != ''">$(PackageVersion)-$(VersionSuffix)</PackageVersion>
     <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
-    <PackageReleaseNotes>Updated to ASP.NET Core 2.0.</PackageReleaseNotes>
+    <PackageReleaseNotes>Updated dependencies mostly.</PackageReleaseNotes>
     <PackageTags>backend server core</PackageTags>
     <Title>Backend Common Abstractions</Title>
     <RepositoryUrl>https://github.com/CometaSolutions/Backend</RepositoryUrl>

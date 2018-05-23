@@ -19,6 +19,7 @@ using Microsoft.Extensions.Configuration;
 using NuGet.Configuration;
 using NuGet.Frameworks;
 using NuGet.ProjectModel;
+using NuGet.Protocol;
 using NuGet.Protocol.Core.Types;
 using System;
 using System.Collections.Generic;
@@ -71,7 +72,9 @@ namespace Backend.Core.Initialization
          NuGetFramework thisFramework,
          String defaultNuGetConfigFileLocation,
          SourceCacheContext sourceCacheContext,
+         LocalPackageFileCache localPackageFileCache,
          LockFile runtimeFrameworkPackages,
+         String runtimeID,
          IConfiguration configuration,
          Func<NuGetAssemblyResolver, Task<T>> creator,
          Func<AssemblyName, Boolean> loadAssemblyFromParentContext
@@ -84,11 +87,13 @@ namespace Backend.Core.Initialization
          var restorer = new BoundRestoreCommandUser(
             GetNuGetSettings( ProcessPathValue( configurationLocation, configuration.GetSection( "NuGetConfigurationFile" ).Get<String>() ), defaultNuGetConfigFileLocation ),
             thisFramework: thisFramework,
+            runtimeIdentifier: runtimeID,
             nugetLogger: new TextWriterLogger( new TextWriterLoggerOptions()
             {
                DebugWriter = null
             } ),
-            sourceCacheContext: sourceCacheContext
+            sourceCacheContext: sourceCacheContext,
+            nuspecCache: localPackageFileCache
             );
          var resolver = NuGetAssemblyResolverFactory.NewNuGetAssemblyResolver(
             restorer,
@@ -195,7 +200,7 @@ namespace Backend.Core.Initialization
                var dic = new Dictionary<(String PackageID, String AssemblyPath), Assembly>();
                for ( var i = 0; i < packagesLength; ++i )
                {
-                  var key = (allPackageInfo[i].Item1, allPackageInfo[i].Item3);
+                  var key = (allPackageInfo[i].PackageID, allPackageInfo[i].AssemblyPath);
                   if ( !dic.ContainsKey( key ) )
                   {
                      dic.Add( key, assemblies[i] );
@@ -210,7 +215,7 @@ namespace Backend.Core.Initialization
                         && assembly != null
                         )
                      {
-                        // Search for type within the assemblye
+                        // Search for type within the assembly
                         var typeName = GetOptionalStringValue( typeConfig, TYPE_NAME );
 
 
@@ -225,6 +230,11 @@ namespace Backend.Core.Initialization
                         {
                            // Search for first available
                            loadedType = assembly.DefinedTypes.FirstOrDefault( t => !t.IsAbstract && targetType.IsAssignableFrom( t ) );
+                        }
+
+                        if ( loadedType?.IsGenericTypeDefinition ?? false )
+                        {
+                           throw new NotImplementedException( "TODO: implement generic parameter substitution to type loader." );
                         }
                      }
                      return new ValueTask<TypeInfo>( loadedType );
