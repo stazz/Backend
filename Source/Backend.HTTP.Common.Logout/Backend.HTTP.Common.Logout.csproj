@@ -21,7 +21,7 @@
   <!-- Assembly information stuff -->
   <PropertyGroup>
     <VersionPrefix>0.2.0</VersionPrefix>
-    <VersionSuffix>beta</VersionSuffix>
+    <VersionSuffix></VersionSuffix>
     <Authors>Stanislav Muhametsin</Authors>
     <Company>Cometa Solutions Ltd</Company>
     <NeutralLanguage>en-US</NeutralLanguage>

@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
    <PropertyGroup>
       <TargetFramework>netstandard2.0</TargetFramework>
@@ -17,13 +17,13 @@
    <!-- Assembly information stuff -->
    <PropertyGroup>
       <VersionPrefix>0.2.0</VersionPrefix>
-      <VersionSuffix>beta</VersionSuffix>
+      <VersionSuffix></VersionSuffix>
       <Authors>Stanislav Muhametsin</Authors>
       <Company>Cometa Solutions Ltd</Company>
       <NeutralLanguage>en-US</NeutralLanguage>
       <AssemblyTitle>$(AssemblyName)</AssemblyTitle>
       <Product>Backend</Product>
-      <Description>Generic login module for backend HTTP servers, configurable to use multiple login providers to authenticate user.</Description>
+      <Description>This package contains definitions for HTTP log levels, and also default implementation for console log consumer.</Description>
       <Copyright>Stanislav Muhametsin</Copyright>
       <AssemblyOriginatorKeyFilePath>$(MSBuildProjectDirectory)\..\..\Keys\$(Product).snk</AssemblyOriginatorKeyFilePath>
    </PropertyGroup>

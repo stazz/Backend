@@ -16,13 +16,13 @@
 
   <ItemGroup>
     <PackageReference Include="UtilPack.Configuration" Version="1.0.1" />
-    <PackageReference Include="Microsoft.AspNetCore.StaticFiles " Version="2.0.2" />
+    <PackageReference Include="Microsoft.AspNetCore.StaticFiles " Version="2.0.3" />
   </ItemGroup>
 
   <!-- Assembly information stuff -->
   <PropertyGroup>
     <VersionPrefix>0.2.0</VersionPrefix>
-    <VersionSuffix>beta</VersionSuffix>
+    <VersionSuffix></VersionSuffix>
     <Authors>Stanislav Muhametsin</Authors>
     <Company>Cometa Solutions Ltd</Company>
     <NeutralLanguage>en-US</NeutralLanguage>
