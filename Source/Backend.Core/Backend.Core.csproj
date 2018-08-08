@@ -17,7 +17,7 @@
 
   <!-- Assembly information stuff -->
   <PropertyGroup>
-    <VersionPrefix>0.2.0</VersionPrefix>
+    <VersionPrefix>0.2.1</VersionPrefix>
     <VersionSuffix></VersionSuffix>
     <Authors>Stanislav Muhametsin</Authors>
     <Company>Cometa Solutions Ltd</Company>
@@ -48,7 +48,7 @@
     <PackageVersion>$(VersionPrefix)</PackageVersion>
     <PackageVersion Condition=" '$(VersionSuffix)' != ''">$(PackageVersion)-$(VersionSuffix)</PackageVersion>
     <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
-    <PackageReleaseNotes>Updated dependencies mostly.</PackageReleaseNotes>
+    <PackageReleaseNotes>Part of the Backend.HTTP.* packages 0.2.1 release.</PackageReleaseNotes>
     <PackageTags>backend server core</PackageTags>
     <Title>Backend Common Abstractions</Title>
     <RepositoryUrl>https://github.com/CometaSolutions/Backend</RepositoryUrl>
