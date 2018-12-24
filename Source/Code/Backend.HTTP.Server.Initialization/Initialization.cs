@@ -15,32 +15,30 @@
  * See the License for the specific language governing permissions and
  * limitations under the License. 
  */
+using Backend.Core;
+using Backend.Core.Initialization;
+using Backend.HTTP.Common;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using NuGet.Configuration;
+using NuGet.Frameworks;
+using NuGet.ProjectModel;
+using NuGet.Protocol;
+using NuGet.Protocol.Core.Types;
+using NuGetUtils.Lib.Common;
+using NuGetUtils.Lib.Restore;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net;
+using System.Reflection;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using UtilPack;
-using UtilPack.NuGet;
-using System.Reflection;
-using NuGet.Protocol.Core.Types;
-using UtilPack.NuGet.AssemblyLoading;
-using NuGet.ProjectModel;
-using Backend.Core.Initialization;
-using Backend.Core;
-using Microsoft.AspNetCore.Http;
-using NuGet.Frameworks;
-using Backend.HTTP.Common;
-using System.Collections.Concurrent;
-using System.Threading;
-using System.Net;
-using NuGet.Protocol;
-
 using TLoggerFactory = UtilPack.Logging.Consume.LogConsumerFactory<Backend.HTTP.Common.HttpLogInfo>;
-
 
 namespace Backend.HTTP.Server.Initialization
 {
@@ -86,7 +84,7 @@ namespace Backend.HTTP.Server.Initialization
 
          if ( thisFramework == null )
          {
-            thisFramework = UtilPackNuGetUtility.TryAutoDetectThisProcessFramework( (infraConfig?.NuGetFrameworkID, infraConfig?.NuGetFrameworkVersion) );
+            thisFramework = NuGetUtility.TryAutoDetectThisProcessFramework( (infraConfig?.NuGetFrameworkID, infraConfig?.NuGetFrameworkVersion) );
          }
          if ( sourceCacheContext == null )
          {
@@ -96,7 +94,7 @@ namespace Backend.HTTP.Server.Initialization
 
          if ( runtimeFrameworkPackages == null )
          {
-            runtimeFrameworkPackages = await GetRuntimeFrameworkPackages( thisFramework: thisFramework, infraConfig: infraConfig, sourceCacheContext: sourceCacheContext );
+            runtimeFrameworkPackages = await GetRuntimeFrameworkPackages( token, thisFramework: thisFramework, infraConfig: infraConfig, sourceCacheContext: sourceCacheContext );
          }
 
          // Connection configuration
@@ -106,7 +104,7 @@ namespace Backend.HTTP.Server.Initialization
          var endPoints = await ProcessEPConfigs( connConfig.EndPoints );
 
          var defaultNuGetFileLocation = infraConfig?.DefaultComponentNuGetConfigurationFile;
-         var rid = UtilPackNuGetUtility.TryAutoDetectThisProcessRuntimeIdentifier();
+         var rid = NuGetUtility.TryAutoDetectThisProcessRuntimeIdentifier();
 
          // Loggers
          var loggerManagers = configuration
@@ -123,7 +121,7 @@ namespace Backend.HTTP.Server.Initialization
                    runtimeFrameworkPackages,
                    rid,
                    loggerConfig,
-                   resolver => resolver.InstantiateFromConfiguration<TLoggerFactory>( loggerConfig ),
+                   resolver => resolver.InstantiateFromConfiguration<TLoggerFactory>( loggerConfig, token ),
                    LoadUsingParentContext
                    );
              } )
@@ -144,7 +142,7 @@ namespace Backend.HTTP.Server.Initialization
                        runtimeFrameworkPackages,
                        rid,
                        singleAuthConfig,
-                       resolver => resolver.InstantiateFromConfiguration<AuthenticatorFactory<HttpContext, HttpRequest, AuthenticationDataHolder>>( singleAuthConfig ),
+                       resolver => resolver.InstantiateFromConfiguration<AuthenticatorFactory<HttpContext, HttpRequest, AuthenticationDataHolder>>( singleAuthConfig, token ),
                        LoadUsingParentContext
                        ) ).ToArray());
                } )
@@ -197,7 +195,7 @@ namespace Backend.HTTP.Server.Initialization
                runtimeFrameworkPackages,
                rid,
                responseCreatorConfig,
-               resolver => resolver.InstantiateFromConfiguration<ResponseCreatorFactory<HttpRequest, HttpRequest, HttpContext, ResponseCreatorInstantiationParameters>>( responseCreatorConfig ),
+               resolver => resolver.InstantiateFromConfiguration<ResponseCreatorFactory<HttpRequest, HttpRequest, HttpContext, ResponseCreatorInstantiationParameters>>( responseCreatorConfig, token ),
                LoadUsingParentContext
                ) )
             .ToArray();
@@ -265,6 +263,7 @@ namespace Backend.HTTP.Server.Initialization
       }
 
       public static async Task<LockFile> GetRuntimeFrameworkPackages(
+         CancellationToken token,
          NuGetFramework thisFramework = null,
          InfrastructureConfiguration infraConfig = null,
          SourceCacheContext sourceCacheContext = null
@@ -285,10 +284,10 @@ namespace Backend.HTTP.Server.Initialization
             var fwPackageVersion = infraConfig?.NuGetFrameworkPackageVersion;
             if ( String.IsNullOrEmpty( fwPackageID ) )
             {
-               fwPackageID = UtilPackNuGetUtility.SDK_PACKAGE_NETCORE;
-               fwPackageVersion = "2.0.0";
+               fwPackageID = NuGetUtility.SDK_PACKAGE_NETCORE;
+               fwPackageVersion = NuGetUtility.GetSDKPackageVersion( restorer.ThisFramework, fwPackageID, fwPackageVersion );
             }
-            return await restorer.RestoreIfNeeded( fwPackageID, fwPackageVersion );
+            return await restorer.RestoreIfNeeded( fwPackageID, fwPackageVersion, token );
          }
       }
 

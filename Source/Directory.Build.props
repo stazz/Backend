@@ -6,6 +6,8 @@
     <CheckForOverflowUnderflow>True</CheckForOverflowUnderflow>
     <TreatWarningsAsErrors>True</TreatWarningsAsErrors>
     <TreatSpecificWarningsAsErrors />
+    <UtilPackConfigurationVersion>1.1.0</UtilPackConfigurationVersion>
+    <AspNetVersion>2.2.0</AspNetVersion>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -25,6 +27,6 @@
   <PropertyGroup Condition=" '$(Configuration)' == 'Release'">
     <DebugType>none</DebugType>
     <DebugSymbols>False</DebugSymbols>
-    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <!--<GenerateDocumentationFile>true</GenerateDocumentationFile>-->
   </PropertyGroup>
 </Project>

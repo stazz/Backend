@@ -39,12 +39,12 @@ namespace Backend.HTTP.Server.Logout
          this._creator = new LogoutResponseCreator();
       }
 
-      protected override ValueTask<ResponseCreator<HttpRequest, HttpContext>> DoCreateResponseCreatorAsync(
+      protected override Task<ResponseCreator<HttpRequest, HttpContext>> DoCreateResponseCreatorAsync(
          ResponseCreatorInstantiationParameters creationParameters,
          CancellationToken token
          )
       {
-         return new ValueTask<ResponseCreator<HttpRequest, HttpContext>>( this._creator );
+         return Task.FromResult<ResponseCreator<HttpRequest, HttpContext>>( this._creator );
       }
    }
 

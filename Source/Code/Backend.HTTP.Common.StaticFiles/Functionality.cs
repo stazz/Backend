@@ -17,20 +17,20 @@
  */
 using Backend.Core;
 using Backend.HTTP.Common;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Builder.Internal;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
-using System;
-using System.Threading;
-using System.Threading.Tasks;
-using UtilPack.Configuration;
-using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
+using System;
 using System.IO;
 using System.Text.RegularExpressions;
-using Microsoft.AspNetCore.StaticFiles;
+using System.Threading;
+using System.Threading.Tasks;
 using UtilPack;
+using UtilPack.Configuration;
 
 namespace Backend.HTTP.Server.StaticFiles
 {
@@ -46,7 +46,7 @@ namespace Backend.HTTP.Server.StaticFiles
          this._config = ArgumentValidator.ValidateNotNull( nameof( configuration ), configuration );
       }
 
-      protected override ValueTask<ResponseCreator<HttpRequest, HttpContext>> DoCreateResponseCreatorAsync(
+      protected override Task<ResponseCreator<HttpRequest, HttpContext>> DoCreateResponseCreatorAsync(
          ResponseCreatorInstantiationParameters creationParameters,
          CancellationToken token
          )
@@ -54,7 +54,7 @@ namespace Backend.HTTP.Server.StaticFiles
          var options = new StaticFileOptions( creationParameters, this._config );
          // We can't use UseFileServer extension method as it will use default middleware logic, and Backend.HTTP.Server will overwrite it with its .Use( ... ) call on application builder.
          // But at least we can get the mime type info from FileExtensionContentTypeProvider
-         return new ValueTask<ResponseCreator<HttpRequest, HttpContext>>( this._config.RequiredAuthenticationSchema == null ?
+         return Task.FromResult( this._config.RequiredAuthenticationSchema == null ?
             (ResponseCreator<HttpRequest, HttpContext>) new PublicStaticFileResponseCreator( options ) :
             new AuthenticationGuardedStaticFileResponseCreator( options ) );
       }

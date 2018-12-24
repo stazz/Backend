@@ -9,8 +9,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="UtilPack.Configuration" Version="1.0.1" />
-    <PackageReference Include="Microsoft.AspNetCore.StaticFiles " Version="2.1.1" />
+    <PackageReference Include="UtilPack.Configuration" Version="$(UtilPackConfigurationVersion)" />
+    <PackageReference Include="Microsoft.AspNetCore.StaticFiles " Version="$(AspNetVersion)" />
   </ItemGroup>
 
   <!-- Assembly information stuff -->

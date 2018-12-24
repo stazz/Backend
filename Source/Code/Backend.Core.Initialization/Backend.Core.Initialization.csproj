@@ -5,8 +5,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="UtilPack.Configuration" Version="1.0.1" />
-    <PackageReference Include="UtilPack.NuGet.AssemblyLoading" Version="2.1.0" />
+    <PackageReference Include="UtilPack.Configuration" Version="$(UtilPackConfigurationVersion)" />
+    <PackageReference Include="NuGetUtils.Lib.AssemblyResolving" Version="1.0.0" />
   </ItemGroup>
 
   <!-- Assembly information stuff -->

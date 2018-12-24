@@ -15,16 +15,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License. 
  */
+using Backend.Core;
+using Microsoft.AspNetCore.Http;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Text;
-using System.Threading.Tasks;
-using Backend.Core;
-using Microsoft.AspNetCore.Http;
-using UtilPack.Configuration;
 using System.Threading;
+using System.Threading.Tasks;
 using UtilPack;
-using Newtonsoft.Json.Linq;
+using UtilPack.Configuration;
 
 namespace Backend.HTTP.Common.Login
 {
@@ -39,12 +39,12 @@ namespace Backend.HTTP.Common.Login
          this._config = loginConfiguration;
       }
 
-      protected override ValueTask<ResponseCreator<HttpRequest, HttpContext>> DoCreateResponseCreatorAsync(
+      protected override Task<ResponseCreator<HttpRequest, HttpContext>> DoCreateResponseCreatorAsync(
          ResponseCreatorInstantiationParameters creationParameters,
          CancellationToken token
          )
       {
-         return new ValueTask<ResponseCreator<HttpRequest, HttpContext>>( new LoginResponseCreator(
+         return Task.FromResult<ResponseCreator<HttpRequest, HttpContext>>( new LoginResponseCreator(
             this._config?.AuthenticationSchema,
             this._config?.LoginProvider,
             this._config?.UsernameFormName,

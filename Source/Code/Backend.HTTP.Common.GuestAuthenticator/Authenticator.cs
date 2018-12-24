@@ -89,12 +89,12 @@ namespace Backend.HTTP.Common.GuestAuthenticator
          this._config = config;
       }
 
-      public override ValueTask<Authenticator<HttpContext, HttpRequest>> CreateAuthenticatorAsync(
+      public override Task<Authenticator<HttpContext, HttpRequest>> CreateAuthenticatorAsync(
          AuthenticationDataHolder creationParameters,
          CancellationToken token
          )
       {
-         return new ValueTask<Authenticator<HttpContext, HttpRequest>>( new GuestHTTPAuthenticator( this._config, creationParameters ) );
+         return Task.FromResult<Authenticator<HttpContext, HttpRequest>>( new GuestHTTPAuthenticator( this._config, creationParameters ) );
       }
    }
 }

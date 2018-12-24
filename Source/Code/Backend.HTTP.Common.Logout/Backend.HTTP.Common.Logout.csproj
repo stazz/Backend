@@ -9,7 +9,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="UtilPack.Configuration" Version="1.0.1" />
+    <PackageReference Include="UtilPack.Configuration" Version="$(UtilPackConfigurationVersion)" />
   </ItemGroup>
 
   <!-- Assembly information stuff -->

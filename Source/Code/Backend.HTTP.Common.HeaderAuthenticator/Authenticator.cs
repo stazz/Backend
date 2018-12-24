@@ -15,22 +15,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License. 
  */
+using Backend.Core;
+using Backend.HTTP.Common;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using System;
-using System.Linq;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Reflection;
-using UtilPack.Configuration;
-using Backend.Core;
 using UtilPack;
-using UtilPack.Cryptography;
-using UtilPack.Cryptography.Digest;
-using Backend.HTTP.Common;
+using UtilPack.Configuration;
 
 namespace Backend.HTTP.Common.HeaderAuthenticator
 {
@@ -47,12 +45,12 @@ namespace Backend.HTTP.Common.HeaderAuthenticator
          this._configuration = authConfiguration ?? new HTTPHeaderBasedAuthenticationConfiguration();
       }
 
-      public override ValueTask<Authenticator<HttpContext, HttpRequest>> CreateAuthenticatorAsync(
+      public override Task<Authenticator<HttpContext, HttpRequest>> CreateAuthenticatorAsync(
          AuthenticationDataHolder creationParameters,
          CancellationToken token
          )
       {
-         return new ValueTask<Authenticator<HttpContext, HttpRequest>>( new HTTPHeaderBasedAuthenticationChecker( this._configuration, creationParameters ) );
+         return Task.FromResult<Authenticator<HttpContext, HttpRequest>>( new HTTPHeaderBasedAuthenticationChecker( this._configuration, creationParameters ) );
       }
    }
 

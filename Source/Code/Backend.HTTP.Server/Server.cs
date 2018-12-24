@@ -116,7 +116,7 @@ namespace Backend.HTTP.Server
          var hostBuilder = new WebHostBuilder();
          var loggerContext = new UtilPack.Logging.Bootstrap.LogRegistration<HttpLogInfo>();
          loggerContext.RegisterLoggers( runningConfiguration.Loggers );
-         var logger = loggerContext.CreateHandlerFromCurrentRegistrations();
+         var logger = loggerContext.CreatePublisherFromCurrentRegistrations();
 
          var creationParams = new ResponseCreatorInstantiationParameters(
             configurationLocation,
@@ -126,7 +126,7 @@ namespace Backend.HTTP.Server
 
          var creators = await Task.WhenAll(
             runningConfiguration.ResponseCreatorFactories
-               .Select( t => t.CreateResponseCreatorAsync( creationParams, token ).AsTask() )
+               .Select( t => t.CreateResponseCreatorAsync( creationParams, token ) )
                .ToArray()
             );
 

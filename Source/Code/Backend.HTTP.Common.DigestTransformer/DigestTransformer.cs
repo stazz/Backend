@@ -15,11 +15,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License. 
  */
+using FluentCryptography.Digest;
 using System;
 using UtilPack;
 using UtilPack.Configuration;
-using UtilPack.Cryptography;
-using UtilPack.Cryptography.Digest;
 
 namespace Backend.HTTP.Common.DigestTransformer
 {

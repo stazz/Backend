@@ -21,17 +21,19 @@ using NuGet.Frameworks;
 using NuGet.ProjectModel;
 using NuGet.Protocol;
 using NuGet.Protocol.Core.Types;
+using NuGetUtils.Lib.AssemblyResolving;
+using NuGetUtils.Lib.Common;
+using NuGetUtils.Lib.Restore;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using UtilPack;
 using UtilPack.Configuration;
-using UtilPack.NuGet;
-using UtilPack.NuGet.AssemblyLoading;
 
 namespace Backend.Core.Initialization
 {
@@ -97,8 +99,8 @@ namespace Backend.Core.Initialization
             );
          var resolver = NuGetAssemblyResolverFactory.NewNuGetAssemblyResolver(
             restorer,
-            runtimeFrameworkPackages,
             out var loader,
+            thisFrameworkRestoreResult: runtimeFrameworkPackages,
             pathProcessor: originalPath =>
             {
                var actualPath = Path.Combine( thisTempFolder, Path.GetFileName( originalPath ) );
@@ -172,6 +174,7 @@ namespace Backend.Core.Initialization
       public static async Task<T> InstantiateFromConfiguration<T>(
          this NuGetAssemblyResolver resolver,
          IConfiguration configuration,
+         CancellationToken token,
          String typeConfigName = "Type"
          )
          where T : class
@@ -194,7 +197,7 @@ namespace Backend.Core.Initialization
                .ToArray();
             var packagesLength = allPackageInfo.Length;
 
-            var assemblies = await resolver.LoadNuGetAssemblies( allPackageInfo );
+            var assemblies = await resolver.LoadNuGetAssemblies( token, allPackageInfo );
             if ( ( assemblies?.Length ?? 0 ) == packagesLength )
             {
                var dic = new Dictionary<(String PackageID, String AssemblyPath), Assembly>();

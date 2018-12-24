@@ -1,12 +1,14 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>netstandard1.1</TargetFrameworks>
+    <TargetFrameworks>netstandard1.0;netstandard2.0</TargetFrameworks>
+    <STTEVersion Condition=" '$(TargetFramework)' == 'net40' ">4.3.0</STTEVersion>
+    <STTEVersion Condition=" '$(STTEVersion)' == ''">4.5.1</STTEVersion>
   </PropertyGroup>
 
-  <ItemGroup>
-    <PackageReference Include="System.Threading.Tasks.Extensions" Version="4.3.0" />
-    <PackageReference Include="System.ValueTuple" Version="4.3.1" />
+  <ItemGroup >
+    <PackageReference Include="System.Threading.Tasks.Extensions" Version="$(STTEVersion)" />
+    <PackageReference Condition=" '$(TargetFramework)' != 'netstandard2.0' " Include="System.ValueTuple" Version="4.5.0" />
   </ItemGroup>
 
   <!-- Assembly information stuff -->
