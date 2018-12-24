@@ -1,0 +1,30 @@
+<Project>
+  <Import Project="$(MSBuildThisFileDirectory)/Directory.Build.BuildTargetFolders.props" />
+
+  <PropertyGroup>
+    <LangVersion>latest</LangVersion>
+    <CheckForOverflowUnderflow>True</CheckForOverflowUnderflow>
+    <TreatWarningsAsErrors>True</TreatWarningsAsErrors>
+    <TreatSpecificWarningsAsErrors />
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <Authors>Stanislav Muhametsin</Authors>
+    <Company></Company>
+    <NeutralLanguage>en-US</NeutralLanguage>
+    <Product>Backend</Product>
+    <Copyright>Stanislav Muhametsin</Copyright>
+    <PackageProjectUrl>https://github.com/stazz/$(Product)</PackageProjectUrl>
+    <RepositoryUrl>$(PackageProjectUrl)/tree/develop/Source/$(MSBuildProjectName)</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
+    <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
+  </PropertyGroup>
+   
+  <!-- Disable all debug information in release mode-->
+  <PropertyGroup Condition=" '$(Configuration)' == 'Release'">
+    <DebugType>none</DebugType>
+    <DebugSymbols>False</DebugSymbols>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+  </PropertyGroup>
+</Project>

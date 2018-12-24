@@ -1,0 +1,35 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+   <PropertyGroup>
+      <TargetFramework>netstandard2.0</TargetFramework>
+   </PropertyGroup>
+
+   <ItemGroup>
+      <ProjectReference Include="..\Backend.HTTP.Common\Backend.HTTP.Common.csproj" />
+   </ItemGroup>
+
+   <!-- Assembly information stuff -->
+   <PropertyGroup>
+      <VersionPrefix>0.2.1</VersionPrefix>
+      <VersionSuffix></VersionSuffix>
+      <AssemblyTitle>$(AssemblyName)</AssemblyTitle>
+      <Description>This package contains definitions for HTTP log levels, and also default implementation for console log consumer.</Description>
+   </PropertyGroup>
+
+   <!-- NuGet package stuff -->
+   <PropertyGroup>
+      <PackageId>$(AssemblyName)</PackageId>
+      <PackageVersion>$(VersionPrefix)</PackageVersion>
+      <PackageVersion Condition=" '$(VersionSuffix)' != ''">$(PackageVersion)-$(VersionSuffix)</PackageVersion>
+      <PackageReleaseNotes>Updated to ASP.NET Core 2.1, thus enabling this to run without any extra setup in e.g. aspnetcore-runtime-alpine container.</PackageReleaseNotes>
+      <PackageTags>backend server core http log logging</PackageTags>
+      <Title>Backend HTTP Logging Module</Title>
+   </PropertyGroup>
+
+  <!--<PropertyGroup>
+    <NuGetPushOnBuildFile>$([MSBuild]::GetPathOfFileAbove(NuGetPushOnBuild.targets))</NuGetPushOnBuildFile>
+  </PropertyGroup>
+  <Import Project="$(NuGetPushOnBuildFile)" Condition="Exists('$(NuGetPushOnBuildFile)')" /> -->
+  <Import Project="$(CIPropsFilePath)" Condition=" '$(CIPropsFilePath)' != '' and Exists('$(CIPropsFilePath)') " />
+  
+</Project>

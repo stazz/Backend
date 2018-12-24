@@ -1,0 +1,37 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Backend.Core.Initialization\Backend.Core.Initialization.csproj" />
+    <ProjectReference Include="..\Backend.HTTP.Common\Backend.HTTP.Common.csproj" />
+    <ProjectReference Include="..\Backend.HTTP.Server\Backend.HTTP.Server.csproj" />
+  </ItemGroup>
+  
+  <!-- Assembly information stuff -->
+  <PropertyGroup>
+    <VersionPrefix>0.2.1</VersionPrefix>
+    <VersionSuffix></VersionSuffix>
+    <AssemblyTitle>$(AssemblyName)</AssemblyTitle>
+    <Description>This package uses and augments Backend.Core.Initialization package for initializing HTTP server of Backend.HTTP.Server package.</Description>
+  </PropertyGroup>
+
+  <!-- NuGet package stuff -->
+  <PropertyGroup>
+    <PackageId>$(AssemblyName)</PackageId>
+    <PackageVersion>$(VersionPrefix)</PackageVersion>
+    <PackageVersion Condition=" '$(VersionSuffix)' != ''">$(PackageVersion)-$(VersionSuffix)</PackageVersion>
+    <PackageReleaseNotes>Updated to ASP.NET Core 2.1, thus enabling this to run without any extra setup in e.g. aspnetcore-runtime-alpine container.</PackageReleaseNotes>
+    <PackageTags>backend server core http server initialization</PackageTags>
+    <Title>Backend HTTP Server Initialization</Title>
+  </PropertyGroup>
+
+  <!--<PropertyGroup>
+    <NuGetPushOnBuildFile>$([MSBuild]::GetPathOfFileAbove(NuGetPushOnBuild.targets))</NuGetPushOnBuildFile>
+  </PropertyGroup>
+  <Import Project="$(NuGetPushOnBuildFile)" Condition="Exists('$(NuGetPushOnBuildFile)')" /> -->
+  <Import Project="$(CIPropsFilePath)" Condition=" '$(CIPropsFilePath)' != '' and Exists('$(CIPropsFilePath)') " />
+  
+</Project>
