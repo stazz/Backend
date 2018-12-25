@@ -5,10 +5,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="UtilPack.Configuration" Version="$(UtilPackConfigurationVersion)" />
-  </ItemGroup>
-
-  <ItemGroup>
     <ProjectReference Include="..\Backend.HTTP.Common.Skeletons\Backend.HTTP.Common.Skeletons.csproj" />
   </ItemGroup>
   

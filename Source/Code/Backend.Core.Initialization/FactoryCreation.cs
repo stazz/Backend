@@ -241,8 +241,15 @@ namespace Backend.Core.Initialization
                         }
                      }
                      return new ValueTask<TypeInfo>( loadedType );
-                  }
-                  ).InstantiateWithConfiguration( configuration, typeof( T ).GetTypeInfo() ) );
+                  } ).InstantiateWithConfiguration( configuration, typeof( T ).GetTypeInfo(), typeInfo =>
+                      {
+                         return DynamicConfigurableTypeLoader.DefaultConfigurationTypeLoaderCallback( typeInfo ) ??
+                            typeInfo // If no [ConfigurationType] is provided, then try to bind to public constructor's single parameter type, if suitable constructor is found
+                               .DeclaredConstructors
+                               .Where( ctor => ctor.IsPublic && ctor.GetParameters().Length == 1 )
+                               .FirstOrDefault()
+                               ?.GetParameters()[0].ParameterType;
+                      } ) );
             }
 
          }

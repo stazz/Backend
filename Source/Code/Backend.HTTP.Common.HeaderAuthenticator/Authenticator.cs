@@ -28,12 +28,10 @@ using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using UtilPack;
-using UtilPack.Configuration;
 
 namespace Backend.HTTP.Common.HeaderAuthenticator
 {
 
-   [ConfigurationType( typeof( HTTPHeaderBasedAuthenticationConfiguration ) )]
    public class HTTPHeaderBasedAuthenticatorFactory : AuthenticatorFactoryImpl
    {
       private readonly HTTPHeaderBasedAuthenticationConfiguration _configuration;

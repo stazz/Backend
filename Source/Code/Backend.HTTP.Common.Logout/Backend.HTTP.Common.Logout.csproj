@@ -8,10 +8,6 @@
     <ProjectReference Include="..\Backend.HTTP.Common.Skeletons\Backend.HTTP.Common.Skeletons.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <PackageReference Include="UtilPack.Configuration" Version="$(UtilPackConfigurationVersion)" />
-  </ItemGroup>
-
   <!-- Assembly information stuff -->
   <PropertyGroup>
     <VersionPrefix>0.2.1</VersionPrefix>

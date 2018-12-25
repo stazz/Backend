@@ -9,7 +9,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="UtilPack.Configuration" Version="$(UtilPackConfigurationVersion)" />
     <PackageReference Include="Microsoft.AspNetCore.StaticFiles " Version="$(AspNetVersion)" />
   </ItemGroup>
 

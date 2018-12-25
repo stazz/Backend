@@ -18,7 +18,6 @@
 using FluentCryptography.Digest;
 using System;
 using UtilPack;
-using UtilPack.Configuration;
 
 namespace Backend.HTTP.Common.DigestTransformer
 {
@@ -28,7 +27,6 @@ namespace Backend.HTTP.Common.DigestTransformer
       public Int32 Base64EncodeShuffleSeed { get; set; } = new Random().Next();
    }
 
-   [ConfigurationType( typeof( DigestTransformerConfiguration ) )]
    public class DigestTransformer : StringTransformer
    {
 

@@ -23,11 +23,9 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using UtilPack;
-using UtilPack.Configuration;
 
 namespace Backend.HTTP.Server.Logout
 {
-   [ConfigurationType( typeof( LogoutConfiguration ) )]
    public class LogoutFunctionalityFactory : PathBasedRegexMatchingResponseCreatorFactory
    {
       private readonly LogoutResponseCreator _creator;

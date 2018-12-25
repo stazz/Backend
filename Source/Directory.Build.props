@@ -6,7 +6,6 @@
     <CheckForOverflowUnderflow>True</CheckForOverflowUnderflow>
     <TreatWarningsAsErrors>True</TreatWarningsAsErrors>
     <TreatSpecificWarningsAsErrors />
-    <UtilPackConfigurationVersion>1.1.0</UtilPackConfigurationVersion>
     <AspNetVersion>2.2.0</AspNetVersion>
   </PropertyGroup>
 

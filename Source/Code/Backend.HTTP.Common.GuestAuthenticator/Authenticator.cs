@@ -20,7 +20,6 @@ using Microsoft.AspNetCore.Http;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
-using UtilPack.Configuration;
 
 namespace Backend.HTTP.Common.GuestAuthenticator
 {
@@ -79,7 +78,6 @@ namespace Backend.HTTP.Common.GuestAuthenticator
       public String UserID { get; set; } = "guest";
    }
 
-   [ConfigurationType( typeof( GuestHTTPAuthenticatorConfiguration ) )]
    public class GuestHTTPAuthenticatorFactory : AuthenticatorFactoryImpl
    {
       private readonly GuestHTTPAuthenticatorConfiguration _config;

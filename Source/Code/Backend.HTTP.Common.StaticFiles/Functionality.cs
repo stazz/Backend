@@ -30,11 +30,9 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using UtilPack;
-using UtilPack.Configuration;
 
 namespace Backend.HTTP.Server.StaticFiles
 {
-   [ConfigurationType( typeof( StaticFileConfiguration ) )]
    public class StaticFileFunctionalityFactory : PathBasedRegexMatchingResponseCreatorFactory
    {
       private readonly StaticFileConfiguration _config;

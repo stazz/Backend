@@ -24,11 +24,9 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using UtilPack;
-using UtilPack.Configuration;
 
 namespace Backend.HTTP.Common.Login
 {
-   [ConfigurationType( typeof( LoginConfiguration ) )]
    public class LoginFunctionalityFactory : PathBasedRegexMatchingResponseCreatorFactory
    {
       private readonly LoginConfiguration _config;
@@ -65,10 +63,8 @@ namespace Backend.HTTP.Common.Login
 
       public String PasswordFormName { get; set; } = DEFAULT_PASSWORD_FORM_NAME;
 
-      [NestedDynamicConfiguration( "LoginProviderConfiguration" )]
       public LoginProvider LoginProvider { get; set; }
 
-      [NestedDynamicConfiguration( "UserIDTransformerConfiguration" )]
       public StringTransformer UserIDTransformer { get; set; }
    }
 

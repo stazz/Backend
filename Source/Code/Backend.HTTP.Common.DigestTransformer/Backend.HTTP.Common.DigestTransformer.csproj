@@ -6,7 +6,6 @@
   
   <ItemGroup>
     <PackageReference Include="FluentCryptography.Digest" Version="1.0.0" />
-    <PackageReference Include="UtilPack.Configuration" Version="$(UtilPackConfigurationVersion)" />
   </ItemGroup>
 
   <ItemGroup>
