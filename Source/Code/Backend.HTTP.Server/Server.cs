@@ -22,6 +22,7 @@ using Microsoft.AspNetCore.Http;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Net;
 using System.Net.Security;
@@ -197,13 +198,13 @@ namespace Backend.HTTP.Server
 
       Action<Microsoft.AspNetCore.Server.Kestrel.Core.KestrelServerLimits> ServerLimitsProcessor { get; }
 
-      IReadOnlyDictionary<IPEndPoint, ServerEndPointConfiguration> EndPoints { get; }
+      ImmutableDictionary<IPEndPoint, ServerEndPointConfiguration> EndPoints { get; }
 
       AuthenticatorAggregator<HttpRequest, HttpContext> AuthChecker { get; }
 
-      ResponseCreatorFactory<HttpRequest, HttpRequest, HttpContext, ResponseCreatorInstantiationParameters>[] ResponseCreatorFactories { get; }
+      ImmutableArray<ResponseCreatorFactory<HttpRequest, HttpRequest, HttpContext, ResponseCreatorInstantiationParameters>> ResponseCreatorFactories { get; }
 
-      IReadOnlyList<TLoggerFactory> Loggers { get; }
+      ImmutableArray<TLoggerFactory> Loggers { get; }
    }
 
    public interface ServerEndPointConfiguration
@@ -223,10 +224,10 @@ namespace Backend.HTTP.Server
       public ServerConfigurationImpl(
          Action<Microsoft.AspNetCore.Server.Kestrel.Core.KestrelServerOptions> serverOptionsProcessor,
          Action<Microsoft.AspNetCore.Server.Kestrel.Core.KestrelServerLimits> serverLimitsProcessor,
-         IReadOnlyDictionary<IPEndPoint, ServerEndPointConfiguration> endPoints,
+         ImmutableDictionary<IPEndPoint, ServerEndPointConfiguration> endPoints,
          AuthenticatorAggregator<HttpRequest, HttpContext> authChecker,
-         ResponseCreatorFactory<HttpRequest, HttpRequest, HttpContext, ResponseCreatorInstantiationParameters>[] responseCreators,
-         IReadOnlyList<TLoggerFactory> logger
+         ImmutableArray<ResponseCreatorFactory<HttpRequest, HttpRequest, HttpContext, ResponseCreatorInstantiationParameters>> responseCreators,
+         ImmutableArray<TLoggerFactory> loggers
          )
       {
          this.ServerOptionsProcessor = serverOptionsProcessor;
@@ -234,7 +235,7 @@ namespace Backend.HTTP.Server
          this.EndPoints = ArgumentValidator.ValidateNotNull( nameof( endPoints ), endPoints );
          this.AuthChecker = authChecker;
          this.ResponseCreatorFactories = responseCreators;
-         this.Loggers = ArgumentValidator.ValidateNotNull( nameof( logger ), logger );
+         this.Loggers = loggers;
       }
 
 
@@ -242,13 +243,13 @@ namespace Backend.HTTP.Server
 
       public Action<Microsoft.AspNetCore.Server.Kestrel.Core.KestrelServerLimits> ServerLimitsProcessor { get; }
 
-      public IReadOnlyDictionary<IPEndPoint, ServerEndPointConfiguration> EndPoints { get; }
+      public ImmutableDictionary<IPEndPoint, ServerEndPointConfiguration> EndPoints { get; }
 
       public AuthenticatorAggregator<HttpRequest, HttpContext> AuthChecker { get; }
 
-      public ResponseCreatorFactory<HttpRequest, HttpRequest, HttpContext, ResponseCreatorInstantiationParameters>[] ResponseCreatorFactories { get; }
+      public ImmutableArray<ResponseCreatorFactory<HttpRequest, HttpRequest, HttpContext, ResponseCreatorInstantiationParameters>> ResponseCreatorFactories { get; }
 
-      public IReadOnlyList<TLoggerFactory> Loggers { get; }
+      public ImmutableArray<TLoggerFactory> Loggers { get; }
    }
 
    public class ServerEndPointConfigurationImpl : ServerEndPointConfiguration

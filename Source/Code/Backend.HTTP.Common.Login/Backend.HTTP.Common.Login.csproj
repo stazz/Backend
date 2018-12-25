@@ -7,10 +7,6 @@
   <ItemGroup>
     <ProjectReference Include="..\Backend.HTTP.Common.Skeletons\Backend.HTTP.Common.Skeletons.csproj" />
   </ItemGroup>
-  
-  <ItemGroup>
-    <PackageReference Include="UtilPack.JSON" Version="1.0.0" />
-  </ItemGroup>
 
   <!-- Assembly information stuff -->
   <PropertyGroup>

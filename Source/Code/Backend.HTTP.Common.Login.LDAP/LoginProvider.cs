@@ -22,11 +22,9 @@ using System.Collections.Concurrent;
 using System.Linq;
 using System.Threading.Tasks;
 using UtilPack;
-using UtilPack.Configuration;
 
 namespace Backend.HTTP.Server.Login.LDAP
 {
-   [ConfigurationType( typeof( LDAPAuthenticatorConfiguration ) )]
    public class LDAPLoginProvider : LoginProvider
    {
       private readonly LDAPServerLoginProvider[] _serverAuthenticators;

@@ -18,6 +18,7 @@
 using Backend.Core;
 using Backend.Core.Initialization;
 using Backend.HTTP.Common;
+using Backend.HTTP.Server.Initialization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using NuGet.Configuration;
@@ -30,6 +31,7 @@ using NuGetUtils.Lib.Restore;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -81,6 +83,8 @@ namespace Backend.HTTP.Server.Initialization
                infraConfig.DefaultComponentNuGetConfigurationFile = DynamicElementManagerFactory.ProcessPathValue( configurationLocation, infraConfig.DefaultComponentNuGetConfigurationFile );
             }
          }
+         var copyAssembliesBeforeLoading = infraConfig?.CopyAssembliesBeforeLoading ?? default;
+
 
          if ( thisFramework == null )
          {
@@ -101,7 +105,11 @@ namespace Backend.HTTP.Server.Initialization
          var connConfig = configuration
             .GetSection( "Connection" )
             .Get<ConnectionConfiguration>();
-         var endPoints = await ProcessEPConfigs( connConfig.EndPoints );
+         var endPoints = await connConfig.EndPoints.ToIPEndPoints();
+         if ( endPoints.IsNullOrEmpty() )
+         {
+            throw new ArgumentException( "Please specify at least one endpoint" );
+         }
 
          var defaultNuGetFileLocation = infraConfig?.DefaultComponentNuGetConfigurationFile;
          var rid = NuGetUtility.TryAutoDetectThisProcessRuntimeIdentifier();
@@ -114,6 +122,7 @@ namespace Backend.HTTP.Server.Initialization
              {
                 return DynamicElementManagerFactory.CreateFromConfig(
                    configurationLocation,
+                   copyAssembliesBeforeLoading,
                    thisFramework,
                    defaultNuGetFileLocation,
                    sourceCacheContext,
@@ -121,7 +130,7 @@ namespace Backend.HTTP.Server.Initialization
                    runtimeFrameworkPackages,
                    rid,
                    loggerConfig,
-                   resolver => resolver.InstantiateFromConfiguration<TLoggerFactory>( loggerConfig, token ),
+                   resolver => resolver.InstantiateFromConfiguration<TLoggerFactory>( loggerConfig, configurationLocation, token ),
                    LoadUsingParentContext
                    );
              } )
@@ -135,6 +144,7 @@ namespace Backend.HTTP.Server.Initialization
                   var authConfig = authConfigData.Get<AuthenticationConfiguration>();
                   return (authConfig, authConfigData.GetSection( "Authenticators" ).GetChildren().Select( singleAuthConfig => DynamicElementManagerFactory.CreateFromConfig(
                        configurationLocation,
+                       copyAssembliesBeforeLoading,
                        thisFramework,
                        defaultNuGetFileLocation,
                        sourceCacheContext,
@@ -142,7 +152,7 @@ namespace Backend.HTTP.Server.Initialization
                        runtimeFrameworkPackages,
                        rid,
                        singleAuthConfig,
-                       resolver => resolver.InstantiateFromConfiguration<AuthenticatorFactory<HttpContext, HttpRequest, AuthenticationDataHolder>>( singleAuthConfig, token ),
+                       resolver => resolver.InstantiateFromConfiguration<AuthenticatorFactory<HttpContext, HttpRequest, AuthenticationDataHolder>>( singleAuthConfig, configurationLocation, token ),
                        LoadUsingParentContext
                        ) ).ToArray());
                } )
@@ -188,6 +198,7 @@ namespace Backend.HTTP.Server.Initialization
             .GetChildren()
             .Select( responseCreatorConfig => DynamicElementManagerFactory.CreateFromConfig(
                configurationLocation,
+               copyAssembliesBeforeLoading,
                thisFramework,
                defaultNuGetFileLocation,
                sourceCacheContext,
@@ -195,7 +206,7 @@ namespace Backend.HTTP.Server.Initialization
                runtimeFrameworkPackages,
                rid,
                responseCreatorConfig,
-               resolver => resolver.InstantiateFromConfiguration<ResponseCreatorFactory<HttpRequest, HttpRequest, HttpContext, ResponseCreatorInstantiationParameters>>( responseCreatorConfig, token ),
+               resolver => resolver.InstantiateFromConfiguration<ResponseCreatorFactory<HttpRequest, HttpRequest, HttpContext, ResponseCreatorInstantiationParameters>>( responseCreatorConfig, configurationLocation, token ),
                LoadUsingParentContext
                ) )
             .ToArray();
@@ -223,19 +234,6 @@ namespace Backend.HTTP.Server.Initialization
             }
          }
 
-         // Can't use ToDictionary_Overwrite directly, since IDictionary does not extend IReadOnlyDictionary
-         var epDic = new Dictionary<IPEndPoint, ServerEndPointConfiguration>();
-         endPoints.ToDictionary_Overwrite(
-                  tuple => tuple.EndPoint,
-                  tuple => new ServerEndPointConfigurationImpl(
-                     DynamicElementManagerFactory.ProcessPathValue( configurationLocation, tuple.OriginatingConfiguration.X509CertificatePath ),
-                     tuple.OriginatingConfiguration.X509CertificatePassword,
-                     tuple.OriginatingConfiguration.CheckCertificateRevocation,
-                     null // TODO client certificate validation
-                     ),
-                  dictionaryFactory: eq => epDic
-                  );
-
          // Now we can create the server configuration
          var serverConfig = new ServerConfigurationImpl(
                ( options ) =>
@@ -246,10 +244,18 @@ namespace Backend.HTTP.Server.Initialization
                      .Bind( options );
                },
                null,
-               epDic,
+               endPoints.ToImmutableDictionary(
+                  ep => ep.EndPoint,
+                  ep => (ServerEndPointConfiguration) new ServerEndPointConfigurationImpl(
+                     DynamicElementManagerFactory.ProcessPathValue( configurationLocation, ep.OriginatingConfiguration.X509CertificatePath ),
+                     ep.OriginatingConfiguration.X509CertificatePassword,
+                     ep.OriginatingConfiguration.CheckCertificateRevocation,
+                     null // TODO client certificate validation
+                     )
+                  ),
                serverAuthHandler,
-               responseCreatorFactories.FilterNulls().ToArray(),
-               ( await Task.WhenAll( loggerManagers.Select( async m => await m.Instance ) ) ).ToList()
+               responseCreatorFactories.FilterNulls().ToImmutableArray(),
+               ( await Task.WhenAll( loggerManagers.Select( async m => await m.Instance ) ) ).ToImmutableArray()
             );
 
          return (
@@ -290,50 +296,6 @@ namespace Backend.HTTP.Server.Initialization
             return await restorer.RestoreIfNeeded( fwPackageID, fwPackageVersion, token );
          }
       }
-
-      private static async Task<List<(IPEndPoint EndPoint, EndPointConfiguration OriginatingConfiguration)>> ProcessEPConfigs( EndPointConfiguration[] endPoints )
-      {
-         if ( endPoints.IsNullOrEmpty() )
-         {
-            throw new ArgumentException( "Please specify at least one endpoint" );
-         }
-
-         var thisAddresses = new AsyncLazy<IPAddress[]>( async () => await Dns.GetHostAddressesAsync( Dns.GetHostName() ) );
-         var retVal = new List<(IPEndPoint EndPoint, EndPointConfiguration OriginatingConfiguration)>();
-         var cache = new Dictionary<String, Task<IPAddress[]>>();
-
-         IPEndPoint GetIPEndPoint( IPAddress address, Int32 portFromConfig )
-         {
-            return new IPEndPoint( address, portFromConfig < 0 || portFromConfig > UInt16.MaxValue ?
-               443 :
-               portFromConfig );
-         }
-
-         foreach ( var epConfig in endPoints )
-         {
-            var curConfig = epConfig;
-            String host;
-            if ( curConfig != null
-               && !String.IsNullOrEmpty( host = curConfig.Host?.Trim() )
-               )
-            {
-               if ( host == "*" )
-               {
-                  // Asterisk means listen to all addresses of this machine
-                  retVal.AddRange( ( await thisAddresses ).Select( addr => (GetIPEndPoint( addr, curConfig.Port ), curConfig) ) );
-               }
-               else
-               {
-                  retVal.AddRange( ( await cache.GetOrAdd_NotThreadSafe( host, h => Dns.GetHostAddressesAsync( h ) ) ).Select( addr => (GetIPEndPoint( addr, curConfig.Port ), curConfig) ) );
-               }
-            }
-         }
-
-
-         return retVal;
-      }
-
-
    }
 
    public sealed class AuthenticationDataHolderImpl : AbstractDisposable, AuthenticationDataHolder
@@ -559,8 +521,15 @@ namespace Backend.HTTP.Server.Initialization
       }
    }
 
+   //public sealed class BackendFixedConfiguration
+   //{
+   //   public InfrastructureConfiguration Infrastructure { get; set; }
+   //   public ConnectionConfiguration Connection { get; set; }
+   //   public Microsoft.AspNetCore.Server.Kestrel.Core.KestrelServerOptions HTTP { get; set; }
+   //}
 
-   public class InfrastructureConfiguration
+
+   public sealed class InfrastructureConfiguration
    {
       public String NuGetConfigurationFile { get; set; }
       public String NuGetFrameworkID { get; set; }
@@ -569,27 +538,29 @@ namespace Backend.HTTP.Server.Initialization
       public String NuGetFrameworkPackageVersion { get; set; }
       public String DefaultComponentNuGetConfigurationFile { get; set; }
 
+      public Boolean CopyAssembliesBeforeLoading { get; set; }
+
 
    }
 
-   public class AuthenticationConfiguration
+   public sealed class AuthenticationConfiguration
    {
       public String Schema { get; set; }
 
       //public AuthenticatorTypeInfo[] Authenticators { get; set; }
    }
 
-   public class AuthenticatorTypeInfo
-   {
+   //public class AuthenticatorTypeInfo
+   //{
 
-   }
+   //}
 
-   public class ConnectionConfiguration
+   public sealed class ConnectionConfiguration
    {
       public EndPointConfiguration[] EndPoints { get; set; }
    }
 
-   public class EndPointConfiguration
+   public sealed class EndPointConfiguration
    {
       public String X509CertificatePath { get; set; }
       public String X509CertificatePassword { get; set; }
@@ -597,10 +568,42 @@ namespace Backend.HTTP.Server.Initialization
 
       public String Host { get; set; } = "localhost";
 
-      public Int32 Port { get; set; } = 443;
+      public Int32? Port { get; set; }
    }
 
 
 
 
+}
+
+
+public static partial class E_Backend
+{
+   public static async Task<ImmutableArray<(IPEndPoint EndPoint, EndPointConfiguration OriginatingConfiguration)>> ToIPEndPoints(
+      this IEnumerable<EndPointConfiguration> endPoints
+      )
+   {
+      var thisAddresses = new AsyncLazy<IPAddress[]>( async () => await Dns.GetHostAddressesAsync( Dns.GetHostName() ) );
+      return ( await Task.WhenAll( endPoints
+         .Select( ep => (ep, ep?.Host) )
+         .Where( tuple => !String.IsNullOrEmpty( tuple.Host ) )
+         .Select( async tuple =>
+         {
+            var curConfig = tuple.ep;
+            var host = tuple.Host;
+            var curPort = curConfig.Port ?? ( String.IsNullOrEmpty( curConfig.X509CertificatePath ) ? 80 : 443 );
+            if ( host == "*" )
+            {
+               // Asterisk means listen to all addresses of this machine
+               return ( await thisAddresses ).Select( addr => (new IPEndPoint( addr, curPort ), curConfig) );
+            }
+            else
+            {
+               // Dns.GetHostAddressesAsync should have good caching in itself without us needing to additionally cache it
+               return ( await Dns.GetHostAddressesAsync( host ) ).Select( addr => (new IPEndPoint( addr, curPort ), curConfig) );
+            }
+         } ) ) )
+         .SelectMany( eps => eps )
+         .ToImmutableArray();
+   }
 }

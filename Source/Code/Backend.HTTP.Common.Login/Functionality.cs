@@ -17,9 +17,11 @@
  */
 using Backend.Core;
 using Microsoft.AspNetCore.Http;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -76,13 +78,14 @@ namespace Backend.HTTP.Common.Login
 
    public class LoginResponseCreator : ResponseCreator<HttpRequest, HttpContext>
    {
+      private readonly Encoding _requestDefaultEncoding;
       private readonly String _authSchema;
       private readonly LoginProvider _authenticator;
       private readonly String _username;
       private readonly String _password;
       private readonly StringTransformer _userIDTransformer;
-      private readonly DefaultLocklessInstancePoolForClasses<ResizableArray<Byte>> _bufferPool;
-      private readonly StreamCharacterReaderLogic _reader;
+      //private readonly DefaultLocklessInstancePoolForClasses<ResizableArray<Byte>> _bufferPool;
+      //private readonly StreamCharacterReaderLogic _reader;
 
       public LoginResponseCreator(
          String authSchema,
@@ -97,8 +100,9 @@ namespace Backend.HTTP.Common.Login
          this._username = username;
          this._password = password;
          this._userIDTransformer = userIDTransformer;
-         this._bufferPool = new DefaultLocklessInstancePoolForClasses<ResizableArray<Byte>>();
-         this._reader = new StreamCharacterReaderLogic( new UTF8Encoding( false, false ).CreateDefaultEncodingInfo() );
+         this._requestDefaultEncoding = new UTF8Encoding( false, false );
+         //this._bufferPool = new DefaultLocklessInstancePoolForClasses<ResizableArray<Byte>>();
+         //this._reader = new StreamCharacterReaderLogic( new UTF8Encoding( false, false ).CreateDefaultEncodingInfo() );
       }
 
       public async Task ProcessForResponseAsync(
@@ -128,44 +132,22 @@ namespace Backend.HTTP.Common.Login
             }
             else if ( String.Equals( request.ContentType, "application/json", StringComparison.OrdinalIgnoreCase )
                && ( len = request.ContentLength ).HasValue
-               && len.Value < 1024 * 1024 * 1024 // 1MB
+               && len.Value < 1024 * 1024 // 1MB
 
                )
             {
-               var buffer = this._bufferPool.TakeInstance();
-               var len32 = (Int32) len;
-               try
+               JObject formData;
+               using ( var tReader = new StreamReader( request.Body, this._requestDefaultEncoding, false, 0x1000, true ) )
+               using ( var jReader = new JsonTextReader( tReader ) )
                {
-                  if ( buffer == null )
-                  {
-                     buffer = new ResizableArray<Byte>();
-                  }
-                  var stream = StreamFactory.CreateLimitedReader( request.Body, len32, buffer: buffer, token: context.RequestAborted );
-                  var boundReader = ReaderFactory.NewNullableMemorizingValueReader(
-                     this._reader,
-                     stream
-                     );
-                  // Allow underlying stream buffer to become roughly max 1024 bytes length
-                  JObject formData;
-                  using ( boundReader.ClearStreamWhenStreamBufferTooBig( stream, 1024 ) )
-                  {
-                     formData = ( await UtilPack.JSON.JTokenStreamReader.Instance.TryReadNextAsync( boundReader ) ) as JObject;
-                  }
-                  username = formData.TryGetValue( this._username, out var jUsername ) ?
-                     ( jUsername as JValue )?.Value as String :
-                     null;
-                  pw = formData.TryGetValue( this._password, out var jPassword ) ?
-                     ( jPassword as JValue )?.Value as String :
-                     null;
+                  formData = await JObject.LoadAsync( jReader, context.RequestAborted );
                }
-               finally
-               {
-                  if ( buffer != null )
-                  {
-                     Array.Clear( buffer.Array, 0, buffer.Array.Length );
-                     this._bufferPool.ReturnInstance( buffer );
-                  }
-               }
+               username = formData.TryGetValue( this._username, out var jUsername ) ?
+                  ( jUsername as JValue )?.Value as String :
+                  null;
+               pw = formData.TryGetValue( this._password, out var jPassword ) ?
+                  ( jPassword as JValue )?.Value as String :
+                  null;
             }
 
 

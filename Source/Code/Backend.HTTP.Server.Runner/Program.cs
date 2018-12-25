@@ -20,22 +20,31 @@ using Backend.HTTP.Server.Initialization;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using System;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
-using UtilPack;
-using System.Reflection;
-
-using TWebHostSetup = System.ValueTuple<Microsoft.AspNetCore.Hosting.IWebHost, Microsoft.Extensions.Configuration.IConfiguration, System.Collections.Concurrent.ConcurrentBag<System.String>, System.Collections.Concurrent.ConcurrentDictionary<System.String, Backend.HTTP.Server.Initialization.AuthenticationDataHolderImpl>>;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using System.Reflection;
+using System.Threading;
+using System.Threading.Tasks;
+using UtilPack;
+using TWebHostSetup = System.ValueTuple<Microsoft.AspNetCore.Hosting.IWebHost, Microsoft.Extensions.Configuration.IConfiguration, System.Collections.Concurrent.ConcurrentBag<System.String>, System.Collections.Concurrent.ConcurrentDictionary<System.String, Backend.HTTP.Server.Initialization.AuthenticationDataHolderImpl>>;
+
+
+// TODO This needs proper rewrite. For some reason, the strong-typed configuration pattern is not used, instead each property is accessed directly via .GetSection(... ).
+// Furthermore, the running logic should really be simplified: using e.g. public static CancellationTokenSource CancelOnLoadedAssemblyChange(this CancellationTokenSource source, ...) etc extension methods.
+// The main loop would just accept CancellationToken and simply exit on cancellation, so that the actual cancellation logic will be decoupled.
+
+// 0. Rename this to Backend.HTTP.Server.Application and make it useable with nuget-exec .NET Core tool.
+// 1. Create strong-typed configuration, BackendApplicationConfiguration, and appropriate methods accepting that.
+// 2. Add extension methods for cancellation
+// 3. Write main loop which simply exits on cancellation.
 
 namespace Backend.HTTP.Server.Runner
 {
    using TWebHostSetupInfo = EitherOr<TWebHostSetup, Int32>;
 
-   class Program
+   public static class Program
    {
       public const Int32 ERROR_INTERNAL_ERROR = 1;
       public const Int32 ERROR_INVALID_SERVER_CONFIG_FILE_LOCATION = 2;
@@ -48,7 +57,7 @@ namespace Backend.HTTP.Server.Runner
       public const String CONFIGURATION_SERVER_STATE_FILE_PATH = "RestartStateFilePath";
       public const String CONFIGURATION_RESTART_SEMAPHORE_NAME = "RestartSemaphoreName";
 
-      static async Task<Int32> Main( String[] args )
+      public static async Task<Int32> Main( String[] args )
       {
          var source = new CancellationTokenSource();
          Console.CancelKeyPress += ( s, e ) =>
@@ -60,7 +69,7 @@ namespace Backend.HTTP.Server.Runner
          TWebHostSetupInfo setupInfo;
          try
          {
-            setupInfo = await CreateWebHostAsync( args, source );
+            setupInfo = await CreateWebHostAsync( args, source.Token );
          }
          catch ( OperationCanceledException )
          {
@@ -98,7 +107,7 @@ namespace Backend.HTTP.Server.Runner
 
       private static async Task<TWebHostSetupInfo> CreateWebHostAsync(
          String[] args,
-         CancellationTokenSource cancelSource
+         CancellationToken token
       )
       {
          TWebHostSetupInfo retVal;
@@ -136,7 +145,7 @@ namespace Backend.HTTP.Server.Runner
             {
                assembliesBag.Add( serverConfigFile );
             }
-            var initInfo = await ServerInitialization.Create(
+            (var serverEndPointConfig, var authManagers, var responseCreatorManagers, var authenticationDataHolders) = await ServerInitialization.Create(
                serverConfigFile,
                serverConfig,
                trackAssemblies ?
@@ -146,20 +155,20 @@ namespace Backend.HTTP.Server.Runner
                }
             :
                (Action<String, String>) null,
-               cancelSource.Token
+               token
                );
 
-            if ( ( initInfo.ServerConfig.ResponseCreatorFactories?.Length ?? 0 ) <= 0 )
+            if ( serverEndPointConfig.ResponseCreatorFactories.Length <= 0 )
             {
                Console.Error.WriteLine( "No response creators loaded!" );
             }
 
             // For some reason, just doing retval = await Server.CreateServerAsync( ... ); does not seem to trigger implicit cast...
             retVal = new TWebHostSetupInfo(
-               (await Server.CreateServerAsync( serverConfigFile, initInfo.ServerConfig, cancelSource.Token ),
+               (await Server.CreateServerAsync( serverConfigFile, serverEndPointConfig, token ),
                config,
                assembliesBag,
-               initInfo.AuthenticationDataHolders
+               authenticationDataHolders
                ) );
 
          }

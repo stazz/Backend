@@ -1,0 +1,64 @@
+version: '1.0.{build}-{branch}'
+image: Ubuntu1804
+services:
+  - docker
+cache:
+  - 'nuget-package-dir'
+  - 'docker-images'
+
+environment:
+  RELATIVE_NUGET_PACKAGE_DIR: 'nuget-package-dir/'
+  RELATIVE_CS_OUTPUT: 'output/'
+  CI_FOLDER: 'CIPipeline'
+  # Due the way AV clones repo when there is tag pushed, we lose information about the branch (e.g. master). So deploy whenever there is tag made, no matter which branch we are on.
+  DEPLOYABLE_BRANCH: 'HEAD'
+
+# The version of .NET Core (and Docker image)
+  DOTNET_VERSION: '2.1'
+
+# Where to publish NuGet packages:
+  DEPLOY_NUGET_SOURCE: 'https://api.nuget.org/v3/index.json'
+
+# The key to use for publishing NuGet packages:
+  DEPLOY_NUGET_API_KEY:
+    secure: jmNuAptgs5SVCnmbuGFx5jTG8xBqczNetl0O+szP9SVLcTmImAFjTNk5mru9u4yv
+
+# For when no symbols should be pushed:
+  DEPLOY_NUGET_NO_SYMBOLS: true
+
+# For when need to sign with secret sign key:
+  ASSEMBLY_SIGN_KEY:
+    secure: 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
+
+  ADDITIONAL_ENVIRONMENT_VARS: 'BACKEND_TEST_RUNNER_CONFIG'
+  BACKEND_TEST_RUNNER_CONFIG: '/repo-dir/contents/Source/Tests/Tests.Backend.HTTP.Server.Runner/ServerConfig.json'
+
+init:
+  - sh: git config --global core.autocrlf false
+  - sh: appveyor UpdateBuild -Version "build-${APPVEYOR_REPO_COMMIT:0:8}-${APPVEYOR_BUILD_NUMBER}"
+
+install:
+  - sh: 'git -C "${APPVEYOR_BUILD_FOLDER}" submodule update --init --recursive'
+  - sh: 'mkdir "${APPVEYOR_BUILD_FOLDER}/git"'
+  - sh: 'git -C "${APPVEYOR_BUILD_FOLDER}" ls-tree --name-only -z HEAD | xargs --null mv -t "${APPVEYOR_BUILD_FOLDER}/git"'
+
+before_build:
+  - sh: '"${APPVEYOR_BUILD_FOLDER}/git/${CI_FOLDER}/appveyor/sync_docker_image.sh" "microsoft/dotnet:${DOTNET_VERSION}-sdk-alpine" "${APPVEYOR_BUILD_FOLDER}/docker-images/dotnet-sdk.tar"'
+
+build_script:
+  - sh: '"${APPVEYOR_BUILD_FOLDER}/git/${CI_FOLDER}/build.sh"'
+  - sh: 'sudo chown -R `id -u` "${APPVEYOR_BUILD_FOLDER}/${RELATIVE_CS_OUTPUT}"'
+  - sh: 'sudo chown -R `id -u` "${APPVEYOR_BUILD_FOLDER}/${RELATIVE_NUGET_PACKAGE_DIR}"'
+
+test_script:
+  - sh: '"${APPVEYOR_BUILD_FOLDER}/git/${CI_FOLDER}/test.sh" "${APPVEYOR_BUILD_FOLDER}/git/${CI_FOLDER}/appveyor/add_tests.sh"'
+  - sh: 'sudo chown -R `id -u` "${APPVEYOR_BUILD_FOLDER}/${RELATIVE_CS_OUTPUT}"'
+  - sh: 'sudo chown -R `id -u` "${APPVEYOR_BUILD_FOLDER}/${RELATIVE_NUGET_PACKAGE_DIR}"'
+
+after_test:
+  - sh: '"${APPVEYOR_BUILD_FOLDER}/git/${CI_FOLDER}/package.sh" "${APPVEYOR_BUILD_FOLDER}/git/${CI_FOLDER}/appveyor/upload_packages.sh"'
+  - sh: 'sudo chown -R `id -u` "${APPVEYOR_BUILD_FOLDER}/${RELATIVE_CS_OUTPUT}"'
+  - sh: 'sudo chown -R `id -u` "${APPVEYOR_BUILD_FOLDER}/${RELATIVE_NUGET_PACKAGE_DIR}"'
+  
+deploy_script:
+  - sh: '${APPVEYOR_BUILD_FOLDER}/git/${CI_FOLDER}/deploy.sh'

@@ -1,0 +1,26 @@
+{
+  "ResponseCreators": [
+  {
+    "Type": {
+      "AssemblyPath": "/repo-dir/BuildTarget/Release/bin/Tests.Backend.HTTP.Server.Runner/netcoreapp2.1/Tests.Backend.HTTP.Server.Runner.dll",
+      "TypeName": "Tests.Backend.HTTP.Server.Runner.SampleBackendOperationFactory"
+    },
+    "Configuration": {
+      "MatchPath": "*",
+      "WhatToSay": "I am working"
+    }
+  }
+  ],
+  "Connection": {
+    "EndPoints": [
+    {
+      "Host": "localhost",
+    }
+    ]
+  },
+  "HTTP": {
+    "Limits": {
+      "KeepAliveTimeout": "00:03:00"
+    }
+  }
+}
