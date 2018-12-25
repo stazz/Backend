@@ -22,10 +22,9 @@
 
   <!-- Assembly signing stuff -->
   <!-- TODO Novell.Directory.Ldap.NETStandard is not signed assembly - once CBAM has LDAP functionality, use that instead! -->
-  <!--<PropertyGroup Condition="'$(Configuration)' == 'Release' and Exists('$(AssemblyOriginatorKeyFilePath)')">
-    <AssemblyOriginatorKeyFile>$(AssemblyOriginatorKeyFilePath)</AssemblyOriginatorKeyFile>
-    <SignAssembly>true</SignAssembly>
-  </PropertyGroup>-->
+  <PropertyGroup Condition="'$(Configuration)' == 'Release' and Exists('$(AssemblyOriginatorKeyFilePath)')">
+    <SignAssembly>false</SignAssembly>
+  </PropertyGroup>
 
   <!-- NuGet package stuff -->
   <PropertyGroup>
